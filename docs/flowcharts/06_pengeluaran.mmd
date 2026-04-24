@@ -1,0 +1,34 @@
+flowchart TD
+    START((Pengeluaran)) --> ROLE{Role User}
+    
+    ROLE -->|Cashier| CSR_EXP[Pengeluaran Cashier]
+    CSR_EXP --> CSR_LIST[Lihat Daftar Pembelian Bahan Baku]
+    CSR_LIST --> CSR_ADD{Tambah Pengeluaran?}
+    CSR_ADD -->|Ya| CSR_FORM[Form Pembelian Bahan Baku]
+    CSR_FORM --> CSR_SELECT[Pilih Bahan Baku]
+    CSR_SELECT --> CSR_INPUT[Input Jumlah, Harga, Supplier]
+    CSR_INPUT --> CSR_SAVE[Simpan Pembelian]
+    CSR_SAVE --> CSR_UPDATE[Update Stok Bahan Baku]
+    CSR_UPDATE --> CSR_LIST
+    CSR_ADD -->|Tidak| CSR_LIST
+
+    ROLE -->|Manager| MGR_EXP[Pengeluaran Manager]
+    MGR_EXP --> MGR_LIST[Lihat Semua Kategori Pengeluaran]
+    MGR_LIST --> MGR_FILTER{Filter Kategori}
+    MGR_FILTER --> CAT1[Pembelian Bahan Baku]
+    MGR_FILTER --> CAT2[Biaya Operasional / BOP]
+    MGR_FILTER --> CAT3[Gaji Karyawan]
+    MGR_FILTER --> CAT4[Pengeluaran Lainnya]
+    
+    CAT1 --> MGR_DETAIL[Lihat Detail Pengeluaran]
+    CAT2 --> MGR_DETAIL
+    CAT3 --> MGR_DETAIL
+    CAT4 --> MGR_DETAIL
+    
+    MGR_DETAIL --> MGR_ADD{Tambah Pengeluaran?}
+    MGR_ADD -->|Ya| MGR_FORM[Form Pengeluaran]
+    MGR_FORM --> MGR_INPUT[Input Kategori, Jumlah, Keterangan]
+    MGR_INPUT --> MGR_SAVE[Simpan Pengeluaran]
+    MGR_SAVE --> MGR_LIST
+    MGR_ADD -->|Tidak| MGR_ANALYZE[Analisa Pengeluaran]
+    MGR_ANALYZE --> MGR_CHART[Grafik Tren Pengeluaran]

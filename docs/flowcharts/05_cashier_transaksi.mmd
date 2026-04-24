@@ -1,0 +1,34 @@
+flowchart TD
+    START((Cashier - Transaksi POS)) --> POS[Buka Halaman POS]
+    
+    POS --> SELECT_PROD[Pilih Produk dari Daftar]
+    SELECT_PROD --> INPUT_QTY[Input Jumlah]
+    INPUT_QTY --> ADD_CART[Tambah ke Keranjang]
+    ADD_CART --> MORE{Tambah Produk Lain?}
+    MORE -->|Ya| SELECT_PROD
+    MORE -->|Tidak| REVIEW[Review Keranjang]
+    
+    REVIEW --> EDIT_CART{Edit Keranjang?}
+    EDIT_CART -->|Ubah Jumlah| CHANGE_QTY[Ubah Quantity]
+    CHANGE_QTY --> REVIEW
+    EDIT_CART -->|Hapus Item| REMOVE_ITEM[Hapus dari Keranjang]
+    REMOVE_ITEM --> REVIEW
+    EDIT_CART -->|Tidak| PAYMENT[Pilih Metode Pembayaran]
+    
+    PAYMENT --> PAY_TYPE{Tipe Pembayaran}
+    PAY_TYPE -->|Cash| INPUT_CASH[Input Jumlah Uang Diterima]
+    INPUT_CASH --> CALC_CHANGE[Hitung Kembalian]
+    PAY_TYPE -->|Transfer| INPUT_REF[Input Referensi Transfer]
+    PAY_TYPE -->|QRIS| SCAN_QR[Scan / Input QRIS]
+    
+    CALC_CHANGE --> PROCESS[Proses Transaksi]
+    INPUT_REF --> PROCESS
+    SCAN_QR --> PROCESS
+    
+    PROCESS --> UPDATE_STOCK[Kurangi Stok Produk]
+    UPDATE_STOCK --> GEN_INVOICE[Generate Invoice / Struk]
+    GEN_INVOICE --> SAVE_SALE[Simpan Data Penjualan]
+    SAVE_SALE --> SUCCESS[Transaksi Berhasil]
+    SUCCESS --> NEW{Transaksi Baru?}
+    NEW -->|Ya| POS
+    NEW -->|Tidak| END((Selesai))

@@ -1,0 +1,138 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ☀️ LIGHT MODE (Clean & Professional) */
+    --background: 210 40% 98%;      /* #F8FAFC */
+    --foreground: 222 47% 11%;      /* #1E293B */
+
+    --card: 0 0% 100%;             /* #FFFFFF */
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 207 58% 44%;         /* #2F77B3 */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 98 44% 55%;        /* #7FBF5B */
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 214 32% 91%;           /* #F1F5F9 (Surface Hover) */
+    --muted-foreground: 215 16% 47%;/* #64748B (Text Secondary) */
+
+    --accent: 214 32% 91%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 84% 60%;       /* #EF4444 */
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 142 71% 45%;         /* #22C55E */
+    --success-foreground: 210 40% 98%;
+
+    --warning: 38 92% 50%;          /* #F59E0B */
+    --warning-foreground: 210 40% 98%;
+
+    --info: 221 83% 53%;            /* #3B82F6 */
+    --info-foreground: 210 40% 98%;
+
+    --border: 214 32% 91%;          /* #E2E8F0 */
+    --input: 214 32% 91%;
+    --ring: 207 58% 44%;            /* Primary */
+
+    --radius: 0.75rem;
+
+    /* Kasir Elements - Light */
+    --kasir-total: 142 76% 36%;     /* #16A34A */
+    
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 215 16% 47%;
+    --sidebar-primary: 207 58% 44%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 210 40% 98%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 207 58% 44%;
+  }
+
+  .dark {
+    /* 🌙 DARK MODE (Modern & Nyaman Mata) */
+    --background: 222 47% 11%;      /* #0F172A */
+    --foreground: 210 40% 98%;      /* #F1F5F9 */
+
+    --card: 222 47% 17%;           /* #1E293B */
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 17%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 208 53% 50%;         /* #3B82C4 */
+    --primary-foreground: 222 47% 11%;
+
+    --secondary: 142 71% 45%;       /* #22C55E (Green) */
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 217 33% 27%;           /* #334155 (Surface Hover) */
+    --muted-foreground: 215 20% 65%;/* #94A3B8 (Text Secondary) */
+
+    --accent: 217 33% 27%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 84% 60%;       /* #EF4444 */
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 142 71% 45%;         /* #22C55E */
+    --success-foreground: 222 47% 11%;
+
+    --warning: 38 92% 50%;          /* #F59E0B */
+    --warning-foreground: 222 47% 11%;
+
+    --info: 199 89% 60%;            /* #38BDF8 */
+    --info-foreground: 222 47% 11%;
+
+    --border: 217 33% 27%;          /* #334155 */
+    --input: 217 33% 27%;
+    --ring: 208 53% 50%;            /* Primary Dark */
+
+    /* Kasir Elements - Dark */
+    --kasir-total: 48 96% 53%;      /* #FACC15 */
+
+    --sidebar-background: 222 47% 11%;
+    --sidebar-foreground: 215 20% 65%;
+    --sidebar-primary: 208 53% 50%;
+    --sidebar-primary-foreground: 222 47% 11%;
+    --sidebar-accent: 217 33% 27%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 27%;
+    --sidebar-ring: 208 53% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-card border border-border rounded-xl;
+  }
+
+  .text-gradient-primary {
+    @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
+  }
+
+  .number-display {
+    @apply font-semibold tracking-tight tabular-nums;
+  }
+}

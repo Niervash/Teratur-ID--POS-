@@ -1,0 +1,31 @@
+flowchart TD
+    START((Manager - Karyawan)) --> LIST[Lihat Daftar Karyawan]
+    
+    LIST --> ADD{Tambah Karyawan?}
+    ADD -->|Ya| FORM_ADD[Form Tambah Karyawan]
+    FORM_ADD --> INPUT_DATA[Input Nama, Jabatan, Gaji]
+    INPUT_DATA --> SET_TYPE{Tipe Gaji}
+    SET_TYPE -->|Harian| DAILY[Input Gaji Harian]
+    SET_TYPE -->|Bulanan| MONTHLY[Input Gaji Bulanan]
+    DAILY --> SET_PROD{Karyawan Produksi?}
+    MONTHLY --> SET_PROD
+    SET_PROD -->|Ya| MARK_PROD[Tandai Sebagai Tenaga Produksi Langsung]
+    SET_PROD -->|Tidak| MARK_NON[Tandai Sebagai Non-Produksi]
+    MARK_PROD --> SAVE[Simpan Karyawan]
+    MARK_NON --> SAVE
+    SAVE --> LIST
+
+    ADD -->|Tidak| EDIT{Edit Karyawan?}
+    EDIT -->|Ya| FORM_EDIT[Form Edit]
+    FORM_EDIT --> UPDATE[Ubah Data Karyawan]
+    UPDATE --> SAVE_EDIT[Simpan]
+    SAVE_EDIT --> CHECK_BTKL{Karyawan Produksi?}
+    CHECK_BTKL -->|Ya| RECALC[Recalculate Alokasi BTKL]
+    CHECK_BTKL -->|Tidak| LIST
+    RECALC --> LIST
+
+    EDIT -->|Tidak| DELETE{Hapus Karyawan?}
+    DELETE -->|Ya| CONFIRM[Konfirmasi Hapus]
+    CONFIRM --> REMOVE[Hapus dari Sistem]
+    REMOVE --> LIST
+    DELETE -->|Tidak| LIST

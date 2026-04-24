@@ -1,0 +1,32 @@
+flowchart TD
+    START((Mulai)) --> CHOICE{Sudah Punya Akun?}
+    
+    CHOICE -->|Ya| LOGIN_FORM[Form Login]
+    CHOICE -->|Tidak| REG_FORM[Form Registrasi]
+
+    LOGIN_FORM --> INPUT_LOGIN[Input Email dan Password]
+    INPUT_LOGIN --> VALIDATE_LOGIN{Validasi Kredensial}
+    VALIDATE_LOGIN -->|Email/Password Salah| ERR_LOGIN[Tampilkan Error]
+    ERR_LOGIN --> INPUT_LOGIN
+    VALIDATE_LOGIN -->|Berhasil| STORE_SESSION[Simpan Session - localStorage]
+    STORE_SESSION --> CHECK_ROLE{Cek Role}
+    CHECK_ROLE -->|Manager| DASH_MGR[Redirect Dashboard Manager]
+    CHECK_ROLE -->|Cashier| DASH_CSR[Redirect Dashboard Cashier]
+
+    REG_FORM --> INPUT_REG[Input Nama, Email, Password, Role]
+    INPUT_REG --> VALID_PASS{Password >= 6 Karakter?}
+    VALID_PASS -->|Tidak| ERR_PASS[Error: Password Terlalu Pendek]
+    ERR_PASS --> INPUT_REG
+    VALID_PASS -->|Ya| CONFIRM_PASS{Password Cocok?}
+    CONFIRM_PASS -->|Tidak| ERR_CONFIRM[Error: Password Tidak Cocok]
+    ERR_CONFIRM --> INPUT_REG
+    CONFIRM_PASS -->|Ya| CHECK_EMAIL{Email Sudah Terdaftar?}
+    CHECK_EMAIL -->|Ya| ERR_EMAIL[Error: Email Sudah Ada]
+    ERR_EMAIL --> INPUT_REG
+    CHECK_EMAIL -->|Tidak| SAVE_USER[Simpan User Baru]
+    SAVE_USER --> STORE_SESSION
+
+    subgraph DEMO[Demo Account]
+        DEMO_MGR[Klik Login Manager] --> STORE_SESSION
+        DEMO_CSR[Klik Login Cashier] --> STORE_SESSION
+    end

@@ -1,0 +1,29 @@
+flowchart TD
+    START((Manager - Chat AI)) --> CHAT[Buka Chat AI]
+    
+    CHAT --> INPUT[Ketik Pesan / Perintah]
+    INPUT --> PARSE{AI Parse Perintah}
+    
+    PARSE --> T1[Query Data]
+    T1 --> T1_PROC[Ambil Data dari Database]
+    T1_PROC --> T1_RESP[Tampilkan Jawaban dengan Data]
+    T1_RESP --> INPUT
+    
+    PARSE --> T2[Analisis Bisnis]
+    T2 --> T2_CALC[Kalkulasi Metrik Bisnis]
+    T2_CALC --> T2_INSIGHT[Berikan Insight dan Rekomendasi]
+    T2_INSIGHT --> INPUT
+    
+    PARSE --> T3[Input Transaksi via Chat]
+    T3 --> T3_EXTRACT[Ekstrak: Produk, Jumlah, Harga]
+    T3_EXTRACT --> T3_CONFIRM{Konfirmasi Data?}
+    T3_CONFIRM -->|Ya| T3_SAVE[Simpan Transaksi]
+    T3_SAVE --> T3_UPDATE[Update Stok]
+    T3_UPDATE --> T3_DONE[Transaksi Berhasil]
+    T3_DONE --> INPUT
+    T3_CONFIRM -->|Tidak| T3_EDIT[Edit Data]
+    T3_EDIT --> T3_CONFIRM
+    
+    PARSE --> T4[Perintah Tidak Dikenali]
+    T4 --> T4_HELP[Tampilkan Bantuan / Saran]
+    T4_HELP --> INPUT

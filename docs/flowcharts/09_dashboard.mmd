@@ -1,0 +1,29 @@
+flowchart TD
+    START((Dashboard)) --> ROLE{Role User}
+    
+    ROLE -->|Manager| MGR[Dashboard Manager - Full]
+    MGR --> KPI_MGR[KPI Cards]
+    KPI_MGR --> KPI1[Total Pendapatan]
+    KPI_MGR --> KPI2[Total Pengeluaran]
+    KPI_MGR --> KPI3[Laba Bersih]
+    KPI_MGR --> KPI4[Jumlah Transaksi]
+    
+    MGR --> CHART_MGR[Grafik dan Analisis]
+    CHART_MGR --> CH1[Grafik Pendapatan - Tren Harian/Mingguan]
+    CHART_MGR --> CH2[Grafik Laba Rugi]
+    CHART_MGR --> CH3[Komposisi Biaya - Pie Chart]
+    CHART_MGR --> CH4[Top Produk Terlaris]
+    
+    MGR --> ACTIVITY[Aktivitas Terbaru]
+    ACTIVITY --> ACT1[Transaksi Terakhir]
+    ACTIVITY --> ACT2[Pengeluaran Terakhir]
+    ACTIVITY --> ACT3[Perubahan Stok]
+
+    ROLE -->|Cashier| CSR[Dashboard Cashier - Terbatas]
+    CSR --> KPI_CSR[KPI Cards]
+    KPI_CSR --> KPI5[Transaksi Hari Ini]
+    KPI_CSR --> KPI6[Total Penjualan Hari Ini]
+    
+    CSR --> QUICK[Quick Actions]
+    QUICK --> Q1[Buat Transaksi Baru]
+    QUICK --> Q2[Catat Pembelian Bahan Baku]

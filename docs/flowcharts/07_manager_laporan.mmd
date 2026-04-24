@@ -1,0 +1,33 @@
+flowchart TD
+    START((Manager - Laporan)) --> REPORT[Halaman Laporan]
+    
+    REPORT --> SELECT{Pilih Jenis Laporan}
+    
+    SELECT --> R1[Laporan Laba Rugi]
+    R1 --> R1_FILTER[Filter Periode - Harian/Mingguan/Bulanan]
+    R1_FILTER --> R1_CALC[Kalkulasi Pendapatan - HPP - Biaya]
+    R1_CALC --> R1_VIEW[Tampilkan Tabel dan Grafik]
+    R1_VIEW --> EXPORT{Export?}
+    
+    SELECT --> R2[Laporan Penjualan]
+    R2 --> R2_FILTER[Filter Tanggal dan Produk]
+    R2_FILTER --> R2_DATA[Tampilkan Data Penjualan]
+    R2_DATA --> R2_SUMMARY[Ringkasan: Total, Rata-rata, Top Product]
+    R2_SUMMARY --> EXPORT
+    
+    SELECT --> R3[Laporan HPP]
+    R3 --> R3_LIST[Daftar Produk dengan HPP]
+    R3_LIST --> R3_BREAKDOWN[Breakdown: BBB + BTKL + BOP]
+    R3_BREAKDOWN --> R3_COMPARE[Bandingkan HPP vs Harga Jual]
+    R3_COMPARE --> EXPORT
+    
+    SELECT --> R4[Laporan Pengeluaran]
+    R4 --> R4_CATEGORY[Pengeluaran per Kategori]
+    R4_CATEGORY --> R4_TREND[Tren Pengeluaran]
+    R4_TREND --> EXPORT
+    
+    EXPORT -->|Ya| FORMAT{Pilih Format}
+    FORMAT --> CSV[Export CSV]
+    FORMAT --> EXCEL[Export Excel]
+    FORMAT --> PDF[Export PDF]
+    EXPORT -->|Tidak| REPORT

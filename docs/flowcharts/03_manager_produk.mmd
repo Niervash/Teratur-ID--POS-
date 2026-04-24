@@ -1,0 +1,37 @@
+flowchart TD
+    START((Manager - Produk)) --> LIST[Lihat Daftar Produk]
+    
+    LIST --> ADD{Tambah Produk Baru?}
+    ADD -->|Ya| FORM_ADD[Form Tambah Produk]
+    FORM_ADD --> INPUT_BASIC[Input Nama, Harga Jual, Stok]
+    INPUT_BASIC --> INPUT_RECIPE[Input Resep - Bahan Baku]
+    INPUT_RECIPE --> SELECT_MAT[Pilih Bahan Baku]
+    SELECT_MAT --> INPUT_QTY[Input Jumlah per Unit]
+    INPUT_QTY --> MORE_MAT{Tambah Bahan Lagi?}
+    MORE_MAT -->|Ya| SELECT_MAT
+    MORE_MAT -->|Tidak| CALC_BBB[Hitung Total BBB per Unit]
+    CALC_BBB --> CALC_HPP[Hitung HPP = BBB + BTKL + BOP]
+    CALC_HPP --> CALC_MARGIN[Hitung Margin = Harga Jual - HPP]
+    CALC_MARGIN --> SAVE_PROD[Simpan Produk]
+    SAVE_PROD --> LIST
+
+    ADD -->|Tidak| EDIT{Edit Produk?}
+    EDIT -->|Ya| FORM_EDIT[Form Edit Produk]
+    FORM_EDIT --> EDIT_DATA[Ubah Data Produk / Resep]
+    EDIT_DATA --> RECALC[Recalculate HPP]
+    RECALC --> SAVE_EDIT[Simpan Perubahan]
+    SAVE_EDIT --> LIST
+
+    EDIT -->|Tidak| DETAIL{Lihat Detail?}
+    DETAIL -->|Ya| PROD_DETAIL[Halaman Detail Produk]
+    PROD_DETAIL --> VIEW_RECIPE[Lihat Komposisi Resep]
+    PROD_DETAIL --> VIEW_HPP[Lihat Breakdown HPP]
+    PROD_DETAIL --> VIEW_MARGIN[Lihat Analisa Margin]
+    
+    LIST --> BTKL{Kelola Alokasi BTKL?}
+    BTKL -->|Ya| BTKL_PAGE[Halaman Alokasi BTKL]
+    BTKL_PAGE --> SELECT_EMP[Pilih Karyawan Produksi]
+    SELECT_EMP --> SET_ALLOC[Set Persentase Alokasi per Produk]
+    SET_ALLOC --> SAVE_BTKL[Simpan Alokasi]
+    SAVE_BTKL --> RECALC_ALL[Recalculate HPP Semua Produk]
+    RECALC_ALL --> LIST
