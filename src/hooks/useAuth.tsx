@@ -21,6 +21,7 @@ interface AuthContextType {
   logout: () => void;
   checkAccess: (allowedRoles: UserRole[]) => boolean;
   hasFeature: (featureId: string) => boolean;
+  addAuditLog: (action: string, target: string, type?: 'create' | 'update' | 'delete' | 'access') => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -57,6 +58,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
+  const addAuditLog = (action: string, target: string, type: 'create' | 'update' | 'delete' | 'access' = 'access') => {
+    const logs = JSON.parse(localStorage.getItem('teratur_audit_logs') || '[]');
+    const newLog = {
+      id: Date.now(),
+      user: user?.name || 'Guest',
+      action,
+      target,
+      time: new Date().toLocaleString('id-ID'),
+      ip: '127.0.0.1', // Mock IP
+      type
+    };
+    localStorage.setItem('teratur_audit_logs', JSON.stringify([newLog, ...logs].slice(0, 100)));
+  };
+
   useEffect(() => {
     // Seed template accounts if not exist
     const existingUsers = JSON.parse(localStorage.getItem('teratur_users') || '[]');
@@ -81,9 +96,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = (authUser: AuthUser) => {
     localStorage.setItem('teratur_auth', JSON.stringify(authUser));
     setUser(authUser);
+    
+    // Direct log for login since state might not be updated yet
+    const logs = JSON.parse(localStorage.getItem('teratur_audit_logs') || '[]');
+    const newLog = {
+      id: Date.now(),
+      user: authUser.name,
+      action: 'Login ke Sistem',
+      target: 'Terminal Web',
+      time: new Date().toLocaleString('id-ID'),
+      ip: '127.0.0.1',
+      type: 'access' as const
+    };
+    localStorage.setItem('teratur_audit_logs', JSON.stringify([newLog, ...logs].slice(0, 100)));
   };
 
   const logout = () => {
+    addAuditLog('Logout dari Sistem', 'Terminal Web', 'access');
     localStorage.removeItem('teratur_auth');
     setUser(null);
     navigate('/login');
@@ -110,6 +139,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     logout,
     checkAccess,
     hasFeature,
+    addAuditLog,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

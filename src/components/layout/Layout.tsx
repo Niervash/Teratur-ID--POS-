@@ -68,7 +68,6 @@ export const Layout = ({ children, hideSidebar = false, hideHeader = false }: La
           </div>
         </main>
       </motion.div>
-      {!hideSidebar && <ChatbotFloating />}
     </div>
   );
 };

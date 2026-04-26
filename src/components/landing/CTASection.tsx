@@ -35,12 +35,23 @@ export const CTASection = () => {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link to="/login">
-                <Button
-                  size="lg"
-                  className="h-13 px-8 text-base font-semibold gap-2.5 bg-primary hover:bg-primary/90 shadow-xl shadow-primary/25"
+                <motion.button
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="h-14 px-10 rounded-2xl bg-primary text-white font-black text-sm uppercase tracking-widest shadow-2xl shadow-primary/40 hover:shadow-primary/60 transition-all flex items-center gap-3 group relative overflow-hidden"
                 >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer" />
                   Mulai Gratis Sekarang
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </motion.button>
+              </Link>
+              <Link to="/login">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="h-14 px-8 rounded-2xl border-2 border-primary/20 hover:border-primary/50 text-primary font-bold transition-all bg-transparent"
+                >
+                  Lihat Demo Dashboard
                 </Button>
               </Link>
             </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
 import { products, Product, ingredients } from '@/data/mockData';
@@ -8,7 +8,7 @@ import {
   Receipt, ShoppingCart, QrCode, Utensils, 
   ShoppingBag, Search, Filter, Coffee, Pizza, 
   IceCream, Wine, ChevronRight, Menu, LayoutDashboard,
-  Truck, Bike, UserPlus, UserCheck, X
+  Truck, Bike, UserPlus, UserCheck, X, LogOut, Lock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -17,11 +17,23 @@ import { Badge } from '@/components/ui/badge';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
 import { Select, Modal, InputNumber } from 'antd';
+import { printReceipt } from '@/lib/printerUtils';
 
 interface CartItem {
   product: Product;
   quantity: number;
   note?: string;
+}
+
+interface ShiftData {
+  id: string;
+  startTime: string;
+  endTime?: string;
+  initialCash: number;
+  finalCash?: number;
+  expectedCash?: number;
+  cashierName: string;
+  status: 'open' | 'closed';
 }
 
 const CATEGORIES = [
@@ -33,7 +45,7 @@ const CATEGORIES = [
 ];
 
 const Transactions = () => {
-  const { hasFeature } = useAuth();
+  const { user, hasFeature, addAuditLog } = useAuth();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orderType, setOrderType] = useState<'dine-in' | 'take-away' | 'delivery'>('dine-in');
   const [deliveryPlatform, setDeliveryPlatform] = useState<string>('GoFood');
@@ -43,6 +55,13 @@ const Transactions = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isPOSMode, setIsPOSMode] = useState(true);
   
+  // Shift States
+  const [activeShift, setActiveShift] = useState<ShiftData | null>(null);
+  const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
+  const [isCloseShiftModalOpen, setIsCloseShiftModalOpen] = useState(false);
+  const [initialCashInput, setInitialCashInput] = useState<number>(0);
+  const [finalCashInput, setFinalCashInput] = useState<number>(0);
+
   // Member States
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [memberSearch, setMemberSearch] = useState('');
@@ -58,6 +77,16 @@ const Transactions = () => {
   const canUseDelivery = hasFeature('online-delivery');
   const canUseMembership = hasFeature('membership');
 
+  // Load Shift from LocalStorage
+  useEffect(() => {
+    const savedShift = localStorage.getItem('teratur_active_shift');
+    if (savedShift) {
+      setActiveShift(JSON.parse(savedShift));
+    } else {
+      setIsShiftModalOpen(true);
+    }
+  }, []);
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
@@ -67,7 +96,65 @@ const Transactions = () => {
     }).format(value);
   };
 
+  const handleStartShift = () => {
+    if (initialCashInput < 0) {
+      toast.error('Modal awal tidak valid');
+      return;
+    }
+    const newShift: ShiftData = {
+      id: `SH-${Date.now()}`,
+      startTime: new Date().toISOString(),
+      initialCash: initialCashInput,
+      cashierName: user?.name || 'Kasir',
+      status: 'open'
+    };
+    setActiveShift(newShift);
+    localStorage.setItem('teratur_active_shift', JSON.stringify(newShift));
+    addAuditLog('Buka Shift', `Modal Awal: ${formatCurrency(initialCashInput)}`, 'access');
+    setIsShiftModalOpen(false);
+    toast.success('Shift berhasil dibuka! Selamat bertugas.');
+  };
+
+  const handleEndShift = () => {
+    const totalSales = JSON.parse(localStorage.getItem('teratur_today_sales') || '0');
+    const expected = (activeShift?.initialCash || 0) + totalSales;
+    
+    const closedShift: ShiftData = {
+      ...activeShift!,
+      endTime: new Date().toISOString(),
+      finalCash: finalCashInput,
+      expectedCash: expected,
+      status: 'closed'
+    };
+
+    addAuditLog('Tutup Shift', `Fisik: ${formatCurrency(finalCashInput)} | Ekspektasi: ${formatCurrency(expected)}`, 'access');
+
+    // Save to history (mock)
+    const shiftHistory = JSON.parse(localStorage.getItem('teratur_shift_history') || '[]');
+    localStorage.setItem('teratur_shift_history', JSON.stringify([...shiftHistory, closedShift]));
+    
+    // Clear active shift
+    localStorage.removeItem('teratur_active_shift');
+    localStorage.removeItem('teratur_today_sales');
+    setActiveShift(null);
+    setIsCloseShiftModalOpen(false);
+    setIsShiftModalOpen(true);
+    
+    const diff = finalCashInput - expected;
+    if (diff === 0) {
+      toast.success('Shift ditutup. Kas sesuai!');
+    } else if (diff > 0) {
+      toast.warning(`Shift ditutup. Ada kelebihan kas: ${formatCurrency(diff)}`);
+    } else {
+      toast.error(`Shift ditutup. Ada kekurangan kas: ${formatCurrency(Math.abs(diff))}`);
+    }
+  };
+
   const addToCart = (product: Product) => {
+    if (!activeShift) {
+      setIsShiftModalOpen(true);
+      return;
+    }
     setCart((prev) => {
       const existing = prev.find((item) => item.product.id === product.id);
       if (existing) {
@@ -105,6 +192,10 @@ const Transactions = () => {
   const total = subtotal - memberDiscount + tax;
 
   const handleOpenPayment = () => {
+    if (!activeShift) {
+      setIsShiftModalOpen(true);
+      return;
+    }
     if (cart.length === 0) {
       toast.error('Pilih menu terlebih dahulu!');
       return;
@@ -156,6 +247,15 @@ const Transactions = () => {
 
     localStorage.setItem('teratur_ingredients', JSON.stringify(updatedIngredients));
     
+    // Record sale for shift reconciliation
+    if (paymentMethod === 'cash') {
+      const currentSales = JSON.parse(localStorage.getItem('teratur_today_sales') || '0');
+      localStorage.setItem('teratur_today_sales', JSON.stringify(currentSales + total));
+    }
+
+    const trxId = `TRX-${Date.now()}`;
+    addAuditLog('Transaksi Berhasil', `${trxId} | Total: ${formatCurrency(total)}`, 'create');
+
     // Add points to member if selected
     if (selectedMember) {
       const earnedPoints = Math.floor((subtotal - memberDiscount) / 10000);
@@ -170,12 +270,16 @@ const Transactions = () => {
     const deliveryInfo = orderType === 'delivery' ? ` via ${deliveryPlatform}` : '';
     toast.success(`Transaksi ${paymentMethod.toUpperCase()}${deliveryInfo} Berhasil!`);
     
-    // Simulate printing receipt
-    setTimeout(() => {
-      toast.info("Mencetak struk...", {
-        icon: <Receipt className="w-4 h-4" />,
-      });
-    }, 500);
+    // Real Printing
+    printReceipt({
+      id: trxId,
+      cashier: user?.name,
+      items: cart,
+      total: total,
+      method: paymentMethod.toUpperCase(),
+      received: paymentMethod === 'cash' ? receivedAmount : total,
+      change: paymentMethod === 'cash' ? Math.max(0, receivedAmount - total) : 0
+    });
 
     clearCart();
     setTableNumber('');
@@ -216,7 +320,20 @@ const Transactions = () => {
     <Layout hideHeader={isPOSMode} hideSidebar={isPOSMode}>
       <div className={`flex flex-col md:flex-row gap-4 lg:gap-6 ${isPOSMode ? 'h-screen p-4' : 'h-[calc(100vh-7rem)] md:h-[calc(100vh-8rem)] lg:h-[calc(100vh-10rem)]'}`}>
         {/* Left Side: Product Selection */}
-        <div className="flex-1 flex flex-col min-w-0 space-y-4 lg:space-y-6">
+        <div className="flex-1 flex flex-col min-w-0 space-y-4 lg:space-y-6 relative">
+          {!activeShift && isPOSMode && (
+            <div className="absolute inset-0 z-40 bg-background/60 backdrop-blur-[2px] rounded-[2.5rem] flex items-center justify-center p-6 text-center">
+              <div className="max-w-xs space-y-4">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+                  <Lock className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold">Shift Belum Dibuka</h3>
+                <p className="text-sm text-muted-foreground">Silakan buka shift untuk mulai melayani pelanggan dan mencatat transaksi.</p>
+                <Button onClick={() => setIsShiftModalOpen(true)} className="w-full rounded-xl">Buka Shift Sekarang</Button>
+              </div>
+            </div>
+          )}
+
           {/* Top Bar */}
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 lg:gap-4">
@@ -233,7 +350,9 @@ const Transactions = () => {
                 )}
                 <div className="min-w-0 overflow-hidden">
                   <h1 className="text-lg md:text-xl font-bold tracking-tight truncate leading-tight">Menu Utama</h1>
-                  <p className="text-[10px] md:text-xs text-muted-foreground truncate">Pilih menu untuk pelanggan</p>
+                  <p className="text-[10px] md:text-xs text-muted-foreground truncate">
+                    {activeShift ? `Shift Aktif: ${activeShift.cashierName}` : 'Pilih menu untuk pelanggan'}
+                  </p>
                 </div>
               </div>
               
@@ -320,6 +439,17 @@ const Transactions = () => {
               </div>
             </div>
             <div className="flex items-center gap-1">
+              {activeShift && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setIsCloseShiftModalOpen(true)} 
+                  className="h-8 w-8 text-muted-foreground hover:text-warning"
+                  title="Akhiri Shift"
+                >
+                  <LogOut className="w-3.5 h-3.5 lg:w-4 h-4" />
+                </Button>
+              )}
               <Button variant="ghost" size="icon" onClick={handlePrintReceipt} className="h-8 w-8 text-muted-foreground hover:text-primary">
                 <Receipt className="w-3.5 h-3.5 lg:w-4 h-4" />
               </Button>
@@ -523,6 +653,105 @@ const Transactions = () => {
           </div>
         </div>
       </div>
+
+      {/* SHIFT OPEN MODAL */}
+      <Modal
+        title={null}
+        open={isShiftModalOpen}
+        closable={false}
+        footer={null}
+        centered
+        width={400}
+      >
+        <div className="p-4 text-center">
+          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Banknote className="w-8 h-8 text-primary" />
+          </div>
+          <h2 className="text-xl font-black mb-2">Buka Shift Kasir</h2>
+          <p className="text-sm text-muted-foreground mb-6">Masukkan modal awal uang di laci kasir (Cash Drawer).</p>
+          
+          <div className="space-y-4 text-left">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase ml-1">Modal Awal (Tunai)</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-muted-foreground">Rp</span>
+                <InputNumber
+                  className="w-full h-12 rounded-xl text-lg font-black pl-10 pt-1 border-primary/20 bg-primary/5"
+                  formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                  parser={value => value!.replace(/\$\s?|(,*)/g, '')}
+                  value={initialCashInput}
+                  onChange={(val) => setInitialCashInput(val || 0)}
+                  autoFocus
+                />
+              </div>
+            </div>
+            
+            <Button 
+              className="w-full h-12 rounded-2xl font-black text-sm shadow-lg shadow-primary/20"
+              onClick={handleStartShift}
+            >
+              MULAI TUGAS
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* SHIFT CLOSE MODAL */}
+      <Modal
+        title={null}
+        open={isCloseShiftModalOpen}
+        onCancel={() => setIsCloseShiftModalOpen(false)}
+        footer={null}
+        centered
+        width={400}
+      >
+        <div className="p-4 text-center">
+          <div className="w-16 h-16 bg-warning/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <LogOut className="w-8 h-8 text-warning" />
+          </div>
+          <h2 className="text-xl font-black mb-2">Akhiri Shift</h2>
+          <p className="text-sm text-muted-foreground mb-6">Hitung total uang fisik yang ada di laci kasir saat ini.</p>
+          
+          <div className="space-y-4 text-left">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase ml-1">Uang Fisik di Laci</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-muted-foreground">Rp</span>
+                <InputNumber
+                  className="w-full h-12 rounded-xl text-lg font-black pl-10 pt-1 border-warning/20 bg-warning/5"
+                  formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                  parser={value => value!.replace(/\$\s?|(,*)/g, '')}
+                  value={finalCashInput}
+                  onChange={(val) => setFinalCashInput(val || 0)}
+                  autoFocus
+                />
+              </div>
+            </div>
+            
+            <div className="p-4 bg-secondary/20 rounded-2xl border border-border/10 space-y-2">
+              <div className="flex justify-between text-xs font-medium">
+                <span>Modal Awal:</span>
+                <span>{formatCurrency(activeShift?.initialCash || 0)}</span>
+              </div>
+              <div className="flex justify-between text-xs font-medium">
+                <span>Total Penjualan Tunai:</span>
+                <span>{formatCurrency(JSON.parse(localStorage.getItem('teratur_today_sales') || '0'))}</span>
+              </div>
+              <div className="border-t border-border/20 pt-2 flex justify-between text-sm font-bold">
+                <span>Ekspektasi Kasir:</span>
+                <span>{formatCurrency((activeShift?.initialCash || 0) + JSON.parse(localStorage.getItem('teratur_today_sales') || '0'))}</span>
+              </div>
+            </div>
+
+            <Button 
+              className="w-full h-12 rounded-2xl font-black text-sm bg-warning hover:bg-warning/90 text-white shadow-lg shadow-warning/20"
+              onClick={handleEndShift}
+            >
+              AKHIRI & TUTUP KAS
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* PAYMENT MODAL */}
       <Modal

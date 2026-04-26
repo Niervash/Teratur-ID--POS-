@@ -1,27 +1,23 @@
-flowchart TD
-    START((Buka Aplikasi)) --> LANDING[Landing Page]
-    LANDING --> LOGIN[Halaman Login]
-    LOGIN --> AUTH{Autentikasi}
-    AUTH -->|Gagal| LOGIN
-    AUTH -->|Berhasil| ROLE{Cek Role User}
-    ROLE -->|Manager| MGR_DASH[Dashboard Manager]
-    ROLE -->|Cashier| CSR_DASH[Dashboard Cashier]
+graph TD
+    A[User/Owner] --> B{Login}
+    B -->|Manager| C[Dashboard Analitik]
+    B -->|Kasir| D[Halaman POS]
+    
+    subgraph "Core Business Logic"
+        C --> C1[Manajemen Produk & Stok]
+        C --> C2[Penjadwalan Karyawan]
+        C --> C3[Laporan Keuangan & Audit]
+        D --> D1[Buka Shift Kasir]
+        D1 --> D2[Transaksi Penjualan]
+        D2 --> D3[Tutup Shift & Rekonsiliasi]
+    end
 
-    MGR_DASH --> MGR_MENU[Menu Manager]
-    MGR_MENU --> M1[Dashboard]
-    MGR_MENU --> M2[Produk]
-    MGR_MENU --> M3[Pengeluaran]
-    MGR_MENU --> M4[Karyawan]
-    MGR_MENU --> M5[Chat AI]
-    MGR_MENU --> M6[Laporan]
-    MGR_MENU --> M7[Pengaturan]
+    subgraph "System Services"
+        S1[Audit Logger]
+        S2[Offline Sync Engine]
+        S3[AI Assistant]
+    end
 
-    CSR_DASH --> CSR_MENU[Menu Cashier]
-    CSR_MENU --> C1[Dashboard]
-    CSR_MENU --> C2[Transaksi / POS]
-    CSR_MENU --> C3[Pengeluaran Bahan Baku]
-
-    M1 --> LOGOUT1[Logout]
-    C1 --> LOGOUT2[Logout]
-    LOGOUT1 --> LOGIN
-    LOGOUT2 --> LOGIN
+    C1 & C2 & C3 & D3 -.-> S1
+    D2 -.-> S2
+    C3 -.-> S3

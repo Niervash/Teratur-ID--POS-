@@ -33,13 +33,14 @@ import {
   RotateCcw,
   XCircle,
   QrCode,
-  Fingerprint
+  Fingerprint,
+  Calendar
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth, UserRole } from '@/hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 interface NavItem {
   icon: React.ElementType;
@@ -152,6 +153,7 @@ const navGroups: NavGroup[] = [
     roles: ['manager'],
     items: [
       { icon: Users, label: 'Daftar Karyawan', path: '/employees' },
+      { icon: Calendar, label: 'Jadwal Kerja', path: '/employees/jadwal' },
       { icon: Fingerprint, label: 'Absensi Fingerprint', path: '/employees/absensi' },
       { icon: DollarSign, label: 'Komisi Penjualan', path: '/employees/komisi' },
     ]
@@ -274,7 +276,7 @@ export const Sidebar = ({ isCollapsed, onToggle, isOpenMobile, onCloseMobile }: 
     <div className="h-full flex flex-col bg-card border-r border-border/30 shadow-xl">
       {/* Logo */}
       <div className="h-16 flex items-center px-4 border-b border-border/30">
-        <div className="flex items-center gap-3">
+        <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden">
             <img src="/Teratur_logo.png" alt="Teratur Logo" className="w-full h-full object-contain" />
           </div>
@@ -284,7 +286,7 @@ export const Sidebar = ({ isCollapsed, onToggle, isOpenMobile, onCloseMobile }: 
               <p className="text-[10px] text-muted-foreground">Smart Management v0.1.0</p>
             </motion.div>
           )}
-        </div>
+        </Link>
       </div>
 
       {/* Navigation */}

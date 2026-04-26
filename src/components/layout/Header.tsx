@@ -20,6 +20,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 interface HeaderProps {
   onOpenMobile?: () => void;
@@ -88,7 +89,8 @@ export const Header = ({ onOpenMobile, isCollapsed, onToggleSidebar }: HeaderPro
       </div>
 
       <div className="flex items-center gap-2 md:gap-4">
-        <div className="hidden sm:flex items-center gap-4">
+        <div className="hidden sm:flex items-center gap-6">
+          <ThemeToggle />
           <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setPeriod(period === 'hari' ? 'bulan' : 'hari')}>
             <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center hidden lg:flex group-hover:bg-success/20 transition-colors">
               <DollarSign className="w-4 h-4 text-success" />

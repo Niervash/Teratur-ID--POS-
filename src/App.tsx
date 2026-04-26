@@ -10,6 +10,7 @@ import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { ConfigProvider, theme as antdTheme } from 'antd';
 import { useEffect, useState } from "react";
 import { PWAManager } from "@/components/PWAManager";
+import { DataInitializer } from "@/components/DataInitializer";
 
 // Pages
 import Landing from "./pages/Landing";
@@ -25,6 +26,7 @@ import Expenses from "./pages/Expenses";
 import InputPengeluaran from "./pages/pengeluaran/InputPengeluaran";
 import DaftarPengeluaranPage from "./pages/pengeluaran/DaftarPengeluaran";
 import Employees from "./pages/Employees";
+import JadwalKerja from "./pages/employees/JadwalKerja";
 import Members from "./pages/Members";
 import Absensi from "./pages/employees/Absensi";
 import Komisi from "./pages/employees/Komisi";
@@ -100,6 +102,7 @@ const AntdConfigWrapper = ({ children }: { children: React.ReactNode }) => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <DataInitializer />
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <AntdConfigWrapper>
         <TooltipProvider>
@@ -139,6 +142,7 @@ const App = () => (
               <Route path="/products" element={<ProtectedRoute roles={['manager']} featureId="master-data"><Products /></ProtectedRoute>} />
               <Route path="/product/:id" element={<ProtectedRoute roles={['manager']} featureId="master-data"><ProductDetail /></ProtectedRoute>} />
               <Route path="/employees" element={<ProtectedRoute roles={['manager']} featureId="employees"><Employees /></ProtectedRoute>} />
+              <Route path="/employees/jadwal" element={<ProtectedRoute roles={['manager']} featureId="employees"><JadwalKerja /></ProtectedRoute>} />
               <Route path="/employees/absensi" element={<ProtectedRoute roles={['manager']} featureId="absensi"><Absensi /></ProtectedRoute>} />
               <Route path="/employees/komisi" element={<ProtectedRoute roles={['manager']} featureId="komisi"><Komisi /></ProtectedRoute>} />
               <Route path="/members" element={<ProtectedRoute roles={['manager', 'cashier']} featureId="membership"><Members /></ProtectedRoute>} />
@@ -190,7 +194,6 @@ const App = () => (
               
               <Route path="*" element={<NotFound />} />
             </Routes>
-            <ThemeToggle />
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

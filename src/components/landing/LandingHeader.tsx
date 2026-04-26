@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Leaf, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export const LandingHeader = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -58,18 +59,21 @@ export const LandingHeader = () => {
           </nav>
 
           {/* Desktop CTA */}
-          <div className="hidden lg:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-4">
             <Link to="/login">
-              <Button variant="ghost" size="sm" className="text-sm">
+              <Button variant="ghost" size="sm" className="text-sm font-semibold">
                 Masuk
               </Button>
             </Link>
             <Link to="/login">
-              <Button size="sm" className="gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25">
+              <Button size="sm" className="gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 font-bold">
                 Mulai Gratis
                 <ArrowRight className="w-3.5 h-3.5" />
               </Button>
             </Link>
+            <div className="pl-2 border-l border-border/50 h-8 flex items-center">
+              <ThemeToggle large />
+            </div>
           </div>
 
           {/* Mobile toggle */}
@@ -89,6 +93,9 @@ export const LandingHeader = () => {
           animate={{ opacity: 1, y: 0 }}
           className="lg:hidden bg-background/95 backdrop-blur-2xl border-b border-border/50 px-4 pb-6 pt-2"
         >
+          <div className="flex justify-end mb-2">
+            <ThemeToggle />
+          </div>
           <nav className="flex flex-col gap-1 mb-4">
             {navLinks.map((link) => (
               <a

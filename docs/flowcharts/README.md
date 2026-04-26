@@ -30,6 +30,7 @@ Aplikasi ini mendukung alur operasional vendor MBG (Makan Bergizi) dari pembelia
 | 07 | `07_manager_laporan.mmd` | Manager: Laporan & Export |
 | 08 | `08_manager_ai_chat.mmd` | Manager: Chat AI |
 | 09 | `09_dashboard.mmd` | Dashboard (berbeda per role) |
+| 10 | `10_shift_management.mmd` | Alur Manajemen Shift & Kas (POS) |
 
 ## Teknologi Terintegrasi
 

@@ -184,8 +184,23 @@ const Login = () => {
       </div>
 
       {/* RIGHT FORM (Login/Register) */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-12 lg:bg-slate-50/30 dark:lg:bg-transparent">
-        <motion.div layout className="w-full max-w-[480px]">
+      <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-12 lg:bg-slate-50/30 dark:lg:bg-transparent relative">
+        
+        {/* MOBILE HEADER (Only visible on mobile) */}
+        <div className="lg:hidden absolute top-0 left-0 w-full p-6 flex items-center justify-between z-20">
+          <Link to="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden">
+              <img src="/Teratur_logo.png" alt="Teratur Logo" className="w-full h-full object-contain" />
+            </div>
+            <span className="text-sm font-black tracking-tighter text-primary">TERATUR.ID</span>
+          </Link>
+          
+          <Link to="/" className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest">
+            <ArrowLeft className="w-3.5 h-3.5" /> Beranda
+          </Link>
+        </div>
+
+        <motion.div layout className="w-full max-w-[480px] mt-12 lg:mt-0">
           
           {/* Stepper UI for Registration */}
           {!isLogin && (

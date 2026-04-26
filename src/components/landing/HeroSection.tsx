@@ -88,20 +88,22 @@ export const HeroSection = () => {
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <Link to="/login" className="w-full sm:w-auto">
-              <Button
-                size="lg"
-                className="w-full sm:w-auto h-13 px-8 text-base font-semibold gap-2.5 bg-primary hover:bg-primary/90 shadow-xl shadow-primary/25 hover:shadow-primary/40 transition-all"
+              <motion.button
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-full sm:w-auto h-14 px-10 rounded-2xl bg-primary text-white font-black text-sm uppercase tracking-widest shadow-2xl shadow-primary/30 hover:shadow-primary/50 transition-all flex items-center justify-center gap-3 group relative overflow-hidden"
               >
-                Mulai Gratis — Tanpa Kartu Kredit
-                <ArrowRight className="w-4 h-4" />
-              </Button>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer" />
+                Mulai Gratis Sekarang
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </motion.button>
             </Link>
             <Button
               size="lg"
               variant="outline"
-              className="w-full sm:w-auto h-13 px-8 text-base gap-2.5 border-border/60 hover:bg-card hover:border-border"
+              className="w-full sm:w-auto h-14 px-8 rounded-2xl border-2 border-primary/20 hover:border-primary/50 text-primary font-bold transition-all bg-transparent"
             >
-              <Play className="w-4 h-4" />
+              <Play className="w-4 h-4 mr-2" />
               Tonton Demo
             </Button>
           </motion.div>

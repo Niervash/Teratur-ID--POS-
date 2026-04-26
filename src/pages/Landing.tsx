@@ -23,7 +23,6 @@ const Landing = () => {
       <DemoFormSection />
       <CTASection />
       <LandingFooter />
-      <ChatbotFloating />
     </div>
   );
 };

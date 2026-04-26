@@ -29,6 +29,16 @@ const getIcon = (type: string) => {
 };
 
 const LogAktivitas = () => {
+  const [logs, setLogs] = useState<any[]>([]);
+
+  useEffect(() => {
+    const storedLogs = localStorage.getItem('teratur_audit_logs');
+    if (storedLogs) {
+      setLogs(JSON.parse(storedLogs));
+    } else {
+      setLogs(mockLogs);
+    }
+  }, []);
   return (
     <Layout>
       <div className="space-y-6">
@@ -110,7 +120,8 @@ const LogAktivitas = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {mockLogs.map((log) => (
+                  {logs.map((log) => (
+
                     <TableRow key={log.id} className="hover:bg-primary/5 transition-colors">
                       <TableCell className="text-xs font-medium font-mono text-muted-foreground">
                         {log.time}

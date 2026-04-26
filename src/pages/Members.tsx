@@ -13,6 +13,8 @@ import {
 import { toast } from 'sonner';
 import { Modal, Form, Input as AntdInput } from 'antd';
 
+import { members as initialMembers } from '@/data/mockData';
+
 export interface Member {
   id: string;
   name: string;
@@ -22,12 +24,6 @@ export interface Member {
   level: 'Bronze' | 'Silver' | 'Gold';
   joinDate: string;
 }
-
-const initialMembers: Member[] = [
-  { id: '1', name: 'Budi Santoso', phone: '08123456789', email: 'budi@gmail.com', points: 150, level: 'Silver', joinDate: '2024-01-10' },
-  { id: '2', name: 'Siti Aminah', phone: '08571234567', email: 'siti@yahoo.com', points: 50, level: 'Bronze', joinDate: '2024-02-15' },
-  { id: '3', name: 'Andi Wijaya', phone: '08119876543', email: 'andi@outlook.com', points: 450, level: 'Gold', joinDate: '2023-11-20' },
-];
 
 const Members = () => {
   const [members, setMembers] = useState<Member[]>([]);
