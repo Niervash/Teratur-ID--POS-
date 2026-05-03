@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'https://silver-loops-go.loca.lt';
+const API_URL = import.meta.env.VITE_API_URL || 'https://localhost:3001';
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem('teratur_token');
