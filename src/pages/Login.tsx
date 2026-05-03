@@ -14,7 +14,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from 'antd';
 import { toast } from 'sonner';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth, TEMPLATE_ACCOUNTS } from '@/hooks/useAuth';
+import { api } from '@/lib/api';
 
 const businessTypes = [
   'Restoran', 'Kafe / Coffee Shop', 'Bakery', 'Catering', 'Food Truck', 'Minuman / Bar'
@@ -74,7 +75,7 @@ const Login = () => {
         const newUser = { 
           id: Date.now().toString(), 
           ...formData, 
-          role: 'manager',
+          role: 'manager' as const,
           subscription: {
             status: 'trial',
             plan: 'Free Trial',
@@ -84,11 +85,8 @@ const Login = () => {
           business: { ...businessData }
         };
         
-        const users = JSON.parse(localStorage.getItem('teratur_users') || '[]');
-        users.push(newUser);
-        localStorage.setItem('teratur_users', JSON.stringify(users));
-        
-        login(newUser);
+        // Note: For real backend, this should be an API call to register
+        login(newUser, 'mock-token-for-reg');
         toast.success("Bisnis Anda berhasil didaftarkan!");
         navigate('/dashboard');
       }, 2500);
@@ -98,21 +96,23 @@ const Login = () => {
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    const users = JSON.parse(localStorage.getItem('teratur_users') || '[]');
-    const user = users.find((u: any) => u.email === formData.email && u.password === formData.password);
-    
-    if (user) {
-      login(user);
-      toast.success(`Selamat datang kembali, ${user.name}`);
-      // Redirect based on internal role
-      if (user.role === 'superadmin') navigate('/superadmin/demo-requests');
-      else if (user.role === 'cashier') navigate('/transactions');
+    try {
+      const response = await api.post<{ user: any, token: string }>('/auth/login', {
+        email: formData.email,
+        password: formData.password
+      });
+      
+      login(response.user, response.token);
+      toast.success(`Selamat datang kembali, ${response.user.name}`);
+      
+      if (response.user.role === 'superadmin') navigate('/superadmin/demo-requests');
+      else if (response.user.role === 'cashier') navigate('/transactions');
       else navigate('/dashboard');
-    } else {
-      toast.error("Email atau password salah");
+    } catch (error: any) {
+      toast.error(error.message || "Email atau password salah");
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   if (isFinishing) {
@@ -132,6 +132,30 @@ const Login = () => {
       </div>
     );
   }
+
+  const handleDemoLogin = async (type: 'sa' | 'm' | 'c') => {
+    setIsLoading(true);
+    const account = type === 'sa' ? TEMPLATE_ACCOUNTS[0] : type === 'm' ? TEMPLATE_ACCOUNTS[1] : TEMPLATE_ACCOUNTS[2];
+    
+    try {
+      const response = await api.post<{ user: any, token: string }>('/auth/login', {
+        email: account.email,
+        password: account.password
+      });
+      
+      login(response.user, response.token);
+      toast.success(`Mode Demo: ${response.user.name}`);
+      
+      if (response.user.role === 'superadmin') navigate('/superadmin/demo-requests');
+      else if (response.user.role === 'cashier') navigate('/transactions');
+      else navigate('/dashboard');
+    } catch (error: any) {
+      toast.error("Gagal terhubung ke backend demo. Pastikan backend menyala.");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col lg:flex-row font-sans">
@@ -369,7 +393,12 @@ const Login = () => {
                 { id: 'm', label: 'Owner Demo', icon: Crown, roles: 'manager', color: 'hover:text-amber-500' },
                 { id: 'c', label: 'Cashier Demo', icon: ShoppingBag, roles: 'cashier', color: 'hover:text-green-500' }
               ].map(d => (
-                <button key={d.id} onClick={() => { login({ id: d.id, name: d.label, role: d.roles as any, email: 'demo@teratur.id' }); navigate(d.roles === 'superadmin' ? '/superadmin/demo-requests' : d.roles === 'cashier' ? '/transactions' : '/dashboard'); }} className={`flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border/50 text-[10px] font-bold text-muted-foreground transition-all hover:shadow-md ${d.color} hover:border-current`}>
+                <button 
+                  key={d.id} 
+                  onClick={() => handleDemoLogin(d.id as any)} 
+                  disabled={isLoading}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border/50 text-[10px] font-bold text-muted-foreground transition-all hover:shadow-md ${d.color} hover:border-current disabled:opacity-50`}
+                >
                   <d.icon className="w-3.5 h-3.5" /> {d.label}
                 </button>
               ))}

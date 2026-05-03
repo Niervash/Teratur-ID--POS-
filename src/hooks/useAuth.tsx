@@ -8,16 +8,18 @@ export interface AuthUser {
   name: string;
   email: string;
   role: UserRole;
+  outletId?: string;
   enabledFeatures?: string[];
 }
 
 interface AuthContextType {
   user: AuthUser | null;
+  token: string | null;
   isLoading: boolean;
   isSuperAdmin: boolean;
   isManager: boolean;
   isCashier: boolean;
-  login: (user: AuthUser) => void;
+  login: (user: AuthUser, token: string) => void;
   logout: () => void;
   checkAccess: (allowedRoles: UserRole[]) => boolean;
   hasFeature: (featureId: string) => boolean;
@@ -29,25 +31,25 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const TEMPLATE_ACCOUNTS = [
   {
     id: 'template-superadmin',
-    name: 'TERATUR.ID Super Admin',
-    email: 'superadmin@teratur.id',
-    password: 'superadmin123',
+    name: 'Internal Developer',
+    email: 'dev@teratur.id',
+    password: 'password123',
     role: 'superadmin' as UserRole,
     enabledFeatures: ['kasir', 'penjualan', 'master-data', 'persediaan', 'laporan', 'settings', 'user-management', 'help', 'expenses', 'employees', 'analisis', 'multi-outlet', 'ai-chat'],
   },
   {
     id: 'template-manager',
-    name: 'Manager Teratur',
-    email: 'manager@teratur.id',
-    password: 'manager123',
+    name: 'Owner Demo',
+    email: 'demo-owner@teratur.id',
+    password: 'password123',
     role: 'manager' as UserRole,
     enabledFeatures: ['kasir', 'penjualan', 'master-data', 'persediaan', 'laporan', 'settings', 'user-management', 'help', 'expenses', 'employees', 'analisis', 'multi-outlet', 'ai-chat'],
   },
   {
     id: 'template-cashier',
-    name: 'Kasir Teratur',
-    email: 'kasir@teratur.id',
-    password: 'kasir123',
+    name: 'Cashier Demo',
+    email: 'demo-cashier@teratur.id',
+    password: 'password123',
     role: 'cashier' as UserRole,
     enabledFeatures: ['kasir', 'penjualan', 'expenses'],
   },
@@ -55,6 +57,7 @@ export const TEMPLATE_ACCOUNTS = [
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -73,29 +76,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    // Seed template accounts if not exist
-    const existingUsers = JSON.parse(localStorage.getItem('teratur_users') || '[]');
-    const hasTemplates = existingUsers.some((u: any) => u.id === 'template-superadmin');
-    if (!hasTemplates) {
-      const merged = [...existingUsers, ...TEMPLATE_ACCOUNTS];
-      localStorage.setItem('teratur_users', JSON.stringify(merged));
-    }
-
     // Load current session
     const storedUser = localStorage.getItem('teratur_auth');
-    if (storedUser) {
+    const storedToken = localStorage.getItem('teratur_token');
+    if (storedUser && storedToken) {
       try {
         setUser(JSON.parse(storedUser));
+        setToken(storedToken);
       } catch {
         localStorage.removeItem('teratur_auth');
+        localStorage.removeItem('teratur_token');
       }
     }
     setIsLoading(false);
   }, []);
 
-  const login = (authUser: AuthUser) => {
+  const login = (authUser: AuthUser, authToken: string) => {
     localStorage.setItem('teratur_auth', JSON.stringify(authUser));
+    localStorage.setItem('teratur_token', authToken);
     setUser(authUser);
+    setToken(authToken);
     
     // Direct log for login since state might not be updated yet
     const logs = JSON.parse(localStorage.getItem('teratur_audit_logs') || '[]');
@@ -114,7 +114,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     addAuditLog('Logout dari Sistem', 'Terminal Web', 'access');
     localStorage.removeItem('teratur_auth');
+    localStorage.removeItem('teratur_token');
     setUser(null);
+    setToken(null);
     navigate('/login');
   };
 
@@ -131,6 +133,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const value: AuthContextType = {
     user,
+    token,
     isLoading,
     isSuperAdmin: user?.role === 'superadmin',
     isManager: user?.role === 'manager',
