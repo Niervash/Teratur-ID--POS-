@@ -109,7 +109,20 @@ const Login = () => {
       else if (response.user.role === 'cashier') navigate('/transactions');
       else navigate('/dashboard');
     } catch (error: any) {
-      toast.error(error.message || "Email atau password salah");
+      // Fallback for Demo purposes: check against template accounts if backend fails
+      const demoAccount = TEMPLATE_ACCOUNTS.find(
+        acc => acc.email === formData.email && acc.password === formData.password
+      );
+
+      if (demoAccount) {
+        login(demoAccount as any, 'mock-token-demo');
+        toast.success(`Mode Offline: Selamat datang, ${demoAccount.name}`);
+        if (demoAccount.role === 'superadmin') navigate('/superadmin/demo-requests');
+        else if (demoAccount.role === 'cashier') navigate('/transactions');
+        else navigate('/dashboard');
+      } else {
+        toast.error(error.message || "Email atau password salah");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -138,6 +151,7 @@ const Login = () => {
     const account = type === 'sa' ? TEMPLATE_ACCOUNTS[0] : type === 'm' ? TEMPLATE_ACCOUNTS[1] : TEMPLATE_ACCOUNTS[2];
     
     try {
+      // Try real backend first
       const response = await api.post<{ user: any, token: string }>('/auth/login', {
         email: account.email,
         password: account.password
@@ -150,8 +164,14 @@ const Login = () => {
       else if (response.user.role === 'cashier') navigate('/transactions');
       else navigate('/dashboard');
     } catch (error: any) {
-      toast.error("Gagal terhubung ke backend demo. Pastikan backend menyala.");
-      console.error(error);
+      // Offline fallback: ignore backend error and login using local template
+      console.warn("Backend not available, using offline demo mode.");
+      login(account as any, 'mock-token-demo');
+      toast.success(`Mode Offline: ${account.name}`);
+      
+      if (account.role === 'superadmin') navigate('/superadmin/demo-requests');
+      else if (account.role === 'cashier') navigate('/transactions');
+      else navigate('/dashboard');
     } finally {
       setIsLoading(false);
     }
