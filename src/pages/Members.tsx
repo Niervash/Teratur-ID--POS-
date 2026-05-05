@@ -11,7 +11,7 @@ import {
   Mail, Star, Trash2, Edit2, Download 
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Modal, Form, Input as AntdInput } from 'antd';
+import { Modal, Form, Input as AntdInput, Select } from 'antd';
 
 import { members as initialMembers } from '@/data/mockData';
 
@@ -29,6 +29,7 @@ const Members = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -46,20 +47,39 @@ const Members = () => {
     localStorage.setItem('teratur_members', JSON.stringify(data));
   };
 
-  const handleAddMember = () => {
+  const handleOpenModal = (member?: Member) => {
+    if (member) {
+      setEditingMember(member);
+      form.setFieldsValue(member);
+    } else {
+      setEditingMember(null);
+      form.resetFields();
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = () => {
     form.validateFields().then(values => {
-      const newMember: Member = {
-        id: `mem-${Date.now()}`,
-        name: values.name,
-        phone: values.phone,
-        email: values.email || '',
-        points: 0,
-        level: 'Bronze',
-        joinDate: new Date().toISOString().split('T')[0]
-      };
-      const updated = [newMember, ...members];
-      saveMembers(updated);
-      toast.success(`Member ${values.name} berhasil didaftarkan!`);
+      if (editingMember) {
+        const updatedMembers = members.map(m => 
+          m.id === editingMember.id ? { ...m, ...values } : m
+        );
+        saveMembers(updatedMembers);
+        toast.success(`Data member ${values.name} berhasil diperbarui!`);
+      } else {
+        const newMember: Member = {
+          id: `mem-${Date.now()}`,
+          name: values.name,
+          phone: values.phone,
+          email: values.email || '',
+          points: 0,
+          level: 'Bronze',
+          joinDate: new Date().toISOString().split('T')[0]
+        };
+        const updated = [newMember, ...members];
+        saveMembers(updated);
+        toast.success(`Member ${values.name} berhasil didaftarkan!`);
+      }
       setIsModalOpen(false);
       form.resetFields();
     });
@@ -88,7 +108,7 @@ const Members = () => {
           </div>
           <div className="flex gap-2">
             <Button variant="outline" className="rounded-xl gap-2"><Download className="w-4 h-4" /> Export</Button>
-            <Button onClick={() => setIsModalOpen(true)} className="rounded-xl gap-2 shadow-lg shadow-primary/20">
+            <Button onClick={() => handleOpenModal()} className="rounded-xl gap-2 shadow-lg shadow-primary/20">
               <UserPlus className="w-4 h-4" /> Tambah Member
             </Button>
           </div>
@@ -183,7 +203,14 @@ const Members = () => {
                   <TableCell className="text-muted-foreground text-xs">{m.joinDate}</TableCell>
                   <TableCell className="text-right pr-6">
                     <div className="flex items-center justify-end gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground"><Edit2 className="w-3.5 h-3.5" /></Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleOpenModal(m)}
+                        className="h-8 w-8 text-muted-foreground"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </Button>
                       <Button variant="ghost" size="icon" onClick={() => handleDelete(m.id, m.name)} className="h-8 w-8 text-destructive hover:bg-destructive/10"><Trash2 className="w-3.5 h-3.5" /></Button>
                     </div>
                   </TableCell>
@@ -195,11 +222,11 @@ const Members = () => {
       </div>
 
       <Modal
-        title="Daftarkan Member Baru"
+        title={editingMember ? "Edit Data Member" : "Daftarkan Member Baru"}
         open={isModalOpen}
-        onOk={handleAddMember}
+        onOk={handleSubmit}
         onCancel={() => setIsModalOpen(false)}
-        okText="Simpan Member"
+        okText={editingMember ? "Simpan Perubahan" : "Simpan Member"}
         centered
         className="rounded-2xl"
       >
@@ -213,6 +240,15 @@ const Members = () => {
           <Form.Item name="email" label="Email (Opsional)">
             <AntdInput className="h-11 rounded-xl" placeholder="E.g. budi@email.com" />
           </Form.Item>
+          {editingMember && (
+            <Form.Item name="level" label="Level Member">
+              <Select className="h-11 rounded-xl">
+                <Select.Option value="Bronze">BRONZE</Select.Option>
+                <Select.Option value="Silver">SILVER</Select.Option>
+                <Select.Option value="Gold">GOLD</Select.Option>
+              </Select>
+            </Form.Item>
+          )}
         </Form>
       </Modal>
     </Layout>

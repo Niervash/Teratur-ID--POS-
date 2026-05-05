@@ -35,7 +35,7 @@ export const TEMPLATE_ACCOUNTS = [
     email: 'dev@teratur.id',
     password: 'password123',
     role: 'superadmin' as UserRole,
-    enabledFeatures: ['kasir', 'penjualan', 'master-data', 'persediaan', 'laporan', 'settings', 'user-management', 'help', 'expenses', 'employees', 'analisis', 'multi-outlet', 'ai-chat'],
+    enabledFeatures: ['kasir', 'penjualan', 'master-data', 'persediaan', 'laporan', 'settings', 'user-management', 'help', 'expenses', 'employees', 'analisis', 'multi-outlet', 'ai-chat', 'membership'],
   },
   {
     id: 'template-manager',
@@ -43,7 +43,7 @@ export const TEMPLATE_ACCOUNTS = [
     email: 'demo-owner@teratur.id',
     password: 'password123',
     role: 'manager' as UserRole,
-    enabledFeatures: ['kasir', 'penjualan', 'master-data', 'persediaan', 'laporan', 'settings', 'user-management', 'help', 'expenses', 'employees', 'analisis', 'multi-outlet', 'ai-chat'],
+    enabledFeatures: ['kasir', 'penjualan', 'master-data', 'persediaan', 'laporan', 'settings', 'user-management', 'help', 'expenses', 'employees', 'analisis', 'multi-outlet', 'ai-chat', 'membership'],
   },
   {
     id: 'template-cashier',
@@ -51,7 +51,7 @@ export const TEMPLATE_ACCOUNTS = [
     email: 'demo-cashier@teratur.id',
     password: 'password123',
     role: 'cashier' as UserRole,
-    enabledFeatures: ['kasir', 'penjualan', 'expenses'],
+    enabledFeatures: ['kasir', 'penjualan', 'expenses', 'membership'],
   },
 ];
 

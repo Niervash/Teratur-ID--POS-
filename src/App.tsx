@@ -129,23 +129,23 @@ const App = () => (
               <Route path="/pengeluaran/daftar" element={<ProtectedRoute roles={['manager', 'cashier']} featureId="expenses"><DaftarPengeluaranPage /></ProtectedRoute>} />
 
               {/* Cashier - Kasir (primary) */}
-              <Route path="/transactions" element={<ProtectedRoute roles={['cashier']} featureId="kasir"><Transactions /></ProtectedRoute>} />
+              <Route path="/transactions" element={<ProtectedRoute roles={['cashier', 'superadmin']} featureId="kasir"><Transactions /></ProtectedRoute>} />
 
               {/* Cashier - Penjualan (dropdown) */}
-              <Route path="/penjualan/pesanan" element={<ProtectedRoute roles={['cashier']} featureId="penjualan"><PesananPenjualan /></ProtectedRoute>} />
-              <Route path="/penjualan/daftar" element={<ProtectedRoute roles={['cashier']} featureId="penjualan"><DaftarPenjualan /></ProtectedRoute>} />
-              <Route path="/penjualan/retur" element={<ProtectedRoute roles={['cashier']} featureId="penjualan"><ReturPenjualan /></ProtectedRoute>} />
-              <Route path="/penjualan/tertolak" element={<ProtectedRoute roles={['cashier']} featureId="penjualan"><PenjualanTertolak /></ProtectedRoute>} />
-              <Route path="/penjualan/qris" element={<ProtectedRoute roles={['cashier']} featureId="penjualan"><QRIS /></ProtectedRoute>} />
+              <Route path="/penjualan/pesanan" element={<ProtectedRoute roles={['cashier', 'superadmin']} featureId="penjualan"><PesananPenjualan /></ProtectedRoute>} />
+              <Route path="/penjualan/daftar" element={<ProtectedRoute roles={['cashier', 'superadmin']} featureId="penjualan"><DaftarPenjualan /></ProtectedRoute>} />
+              <Route path="/penjualan/retur" element={<ProtectedRoute roles={['cashier', 'superadmin']} featureId="penjualan"><ReturPenjualan /></ProtectedRoute>} />
+              <Route path="/penjualan/tertolak" element={<ProtectedRoute roles={['cashier', 'superadmin']} featureId="penjualan"><PenjualanTertolak /></ProtectedRoute>} />
+              <Route path="/penjualan/qris" element={<ProtectedRoute roles={['cashier', 'superadmin']} featureId="penjualan"><QRIS /></ProtectedRoute>} />
 
               {/* Manager only */}
-              <Route path="/products" element={<ProtectedRoute roles={['manager']} featureId="master-data"><Products /></ProtectedRoute>} />
-              <Route path="/product/:id" element={<ProtectedRoute roles={['manager']} featureId="master-data"><ProductDetail /></ProtectedRoute>} />
-              <Route path="/employees" element={<ProtectedRoute roles={['manager']} featureId="employees"><Employees /></ProtectedRoute>} />
-              <Route path="/employees/jadwal" element={<ProtectedRoute roles={['manager']} featureId="employees"><JadwalKerja /></ProtectedRoute>} />
-              <Route path="/employees/absensi" element={<ProtectedRoute roles={['manager']} featureId="absensi"><Absensi /></ProtectedRoute>} />
-              <Route path="/employees/komisi" element={<ProtectedRoute roles={['manager']} featureId="komisi"><Komisi /></ProtectedRoute>} />
-              <Route path="/members" element={<ProtectedRoute roles={['manager', 'cashier']} featureId="membership"><Members /></ProtectedRoute>} />
+              <Route path="/products" element={<ProtectedRoute roles={['manager', 'superadmin']} featureId="master-data"><Products /></ProtectedRoute>} />
+              <Route path="/product/:id" element={<ProtectedRoute roles={['manager', 'superadmin']} featureId="master-data"><ProductDetail /></ProtectedRoute>} />
+              <Route path="/employees" element={<ProtectedRoute roles={['manager', 'superadmin']} featureId="employees"><Employees /></ProtectedRoute>} />
+              <Route path="/employees/jadwal" element={<ProtectedRoute roles={['manager', 'superadmin']} featureId="employees"><JadwalKerja /></ProtectedRoute>} />
+              <Route path="/employees/absensi" element={<ProtectedRoute roles={['manager', 'superadmin']} featureId="absensi"><Absensi /></ProtectedRoute>} />
+              <Route path="/employees/komisi" element={<ProtectedRoute roles={['manager', 'superadmin']} featureId="komisi"><Komisi /></ProtectedRoute>} />
+              <Route path="/members" element={<ProtectedRoute roles={['manager', 'cashier', 'superadmin']} featureId="membership"><Members /></ProtectedRoute>} />
               <Route path="/chat" element={<ProtectedRoute roles={['manager']} featureId="ai-chat"><AIChat /></ProtectedRoute>} />
               <Route path="/reports" element={<ProtectedRoute roles={['manager']} featureId="laporan"><Reports /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute roles={['manager']} featureId="settings"><Settings /></ProtectedRoute>} />

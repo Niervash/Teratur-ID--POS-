@@ -78,13 +78,13 @@ const navGroups: NavGroup[] = [
     icon: Receipt, 
     label: 'Kasir', 
     path: '/transactions', 
-    roles: ['cashier'] 
+    roles: ['cashier', 'superadmin'] 
   },
   {
     id: 'penjualan',
     icon: ShoppingCart,
     label: 'Penjualan',
-    roles: ['cashier'],
+    roles: ['cashier', 'superadmin'],
     items: [
       { icon: ClipboardList, label: 'Pesanan Penjualan', path: '/penjualan/pesanan' },
       { icon: BarChart3, label: 'Daftar Penjualan', path: '/penjualan/daftar' },
@@ -108,7 +108,7 @@ const navGroups: NavGroup[] = [
     icon: Users,
     label: 'Member',
     path: '/members',
-    roles: ['manager', 'cashier']
+    roles: ['manager', 'cashier', 'superadmin']
   },
 
   // === MANAGER menus ===

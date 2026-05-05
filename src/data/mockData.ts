@@ -179,6 +179,8 @@ export const members: any[] = [
   { id: '1', name: 'Budi Santoso', phone: '08123456789', email: 'budi@gmail.com', points: 150, level: 'Silver', joinDate: '2024-01-10' },
   { id: '2', name: 'Siti Aminah', phone: '08571234567', email: 'siti@yahoo.com', points: 50, level: 'Bronze', joinDate: '2024-02-15' },
   { id: '3', name: 'Andi Wijaya', phone: '08119876543', email: 'andi@outlook.com', points: 450, level: 'Gold', joinDate: '2023-11-20' },
+  { id: '4', name: 'Dewi Lestari', phone: '08122233344', email: 'dewi@gmail.com', points: 1000, level: 'Gold', joinDate: '2023-05-10' },
+  { id: '5', name: 'Rian Hidayat', phone: '08987654321', email: 'rian@gmail.com', points: 25, level: 'Bronze', joinDate: '2025-01-05' },
 ];
 
 export const employees: any[] = [

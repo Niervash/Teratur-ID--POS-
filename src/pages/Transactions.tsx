@@ -8,7 +8,7 @@ import {
   Receipt, ShoppingCart, QrCode, Utensils, 
   ShoppingBag, Search, Filter, Coffee, Pizza, 
   IceCream, Wine, ChevronRight, Menu, LayoutDashboard,
-  Truck, Bike, UserPlus, UserCheck, X, LogOut, Lock
+  Truck, Bike, UserPlus, UserCheck, X, LogOut, Lock, Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -66,6 +66,36 @@ const Transactions = () => {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [memberSearch, setMemberSearch] = useState('');
   const [showMemberResults, setShowMemberResults] = useState(false);
+  const [isQuickMemberModalOpen, setIsQuickMemberModalOpen] = useState(false);
+  const [memberForm] = Modal.useModal(); // Note: Switching to local form state for better control
+  const [quickMemberData, setQuickMemberData] = useState({ name: '', phone: '', email: '' });
+  const [usedPoints, setUsedPoints] = useState<number>(0);
+
+  const handleQuickRegister = () => {
+    if (!quickMemberData.name || !quickMemberData.phone) {
+      toast.error("Nama dan No HP wajib diisi!");
+      return;
+    }
+
+    const newMember: Member = {
+      id: `mem-${Date.now()}`,
+      name: quickMemberData.name,
+      phone: quickMemberData.phone,
+      email: quickMemberData.email || '',
+      points: 0,
+      level: 'Bronze',
+      joinDate: new Date().toISOString().split('T')[0]
+    };
+
+    const allMembers = JSON.parse(localStorage.getItem('teratur_members') || '[]');
+    const updated = [newMember, ...allMembers];
+    localStorage.setItem('teratur_members', JSON.stringify(updated));
+    
+    setSelectedMember(newMember);
+    setIsQuickMemberModalOpen(false);
+    setQuickMemberData({ name: '', phone: '', email: '' });
+    toast.success(`Member ${newMember.name} berhasil didaftarkan & dipilih!`);
+  };
 
   // Payment Modal States
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -187,9 +217,21 @@ const Transactions = () => {
   const clearCart = () => setCart([]);
 
   const subtotal = cart.reduce((sum, item) => sum + item.product.sellingPrice * item.quantity, 0);
-  const memberDiscount = selectedMember ? subtotal * 0.05 : 0; // 5% Discount
-  const tax = (subtotal - memberDiscount) * 0.1; // 10% PB1/Tax
-  const total = subtotal - memberDiscount + tax;
+  
+  const getTierDiscountRate = (level?: string) => {
+    switch (level) {
+      case 'Gold': return 0.10;
+      case 'Silver': return 0.05;
+      case 'Bronze': return 0.02;
+      default: return 0;
+    }
+  };
+
+  const tierDiscount = selectedMember ? subtotal * getTierDiscountRate(selectedMember.level) : 0;
+  const pointsValue = usedPoints * 100; // 1 point = Rp 100
+  const memberDiscount = tierDiscount + pointsValue;
+  const tax = Math.max(0, (subtotal - memberDiscount) * 0.1); // 10% PB1/Tax
+  const total = Math.max(0, subtotal - memberDiscount + tax);
 
   const handleOpenPayment = () => {
     if (!activeShift) {
@@ -256,15 +298,20 @@ const Transactions = () => {
     const trxId = `TRX-${Date.now()}`;
     addAuditLog('Transaksi Berhasil', `${trxId} | Total: ${formatCurrency(total)}`, 'create');
 
-    // Add points to member if selected
+    // Add/Deduct points to member if selected
     if (selectedMember) {
-      const earnedPoints = Math.floor((subtotal - memberDiscount) / 10000);
+      const earnedPoints = Math.floor((subtotal - tierDiscount) / 10000);
       const allMembers = JSON.parse(localStorage.getItem('teratur_members') || '[]');
       const updatedMembers = allMembers.map((m: Member) => 
-        m.id === selectedMember.id ? { ...m, points: m.points + earnedPoints } : m
+        m.id === selectedMember.id ? { ...m, points: m.points - usedPoints + earnedPoints } : m
       );
       localStorage.setItem('teratur_members', JSON.stringify(updatedMembers));
-      toast.success(`Berhasil! Member mendapatkan ${earnedPoints} point.`);
+      
+      if (usedPoints > 0) {
+        toast.success(`Berhasil! ${usedPoints} poin digunakan & mendapatkan ${earnedPoints} poin baru.`);
+      } else {
+        toast.success(`Berhasil! Member mendapatkan ${earnedPoints} poin.`);
+      }
     }
 
     const deliveryInfo = orderType === 'delivery' ? ` via ${deliveryPlatform}` : '';
@@ -285,6 +332,7 @@ const Transactions = () => {
     setTableNumber('');
     setOnlineOrderId('');
     setSelectedMember(null);
+    setUsedPoints(0);
     setIsPaymentModalOpen(false);
   };
 
@@ -368,10 +416,10 @@ const Transactions = () => {
                   </Button>
                 )}
                 <div className="relative flex-1 sm:w-48 md:w-56 lg:w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/70" />
                   <Input 
                     placeholder="Cari menu..." 
-                    className="pl-9 h-9 md:h-10 bg-card/50 rounded-xl text-xs md:text-sm w-full border-border/30 focus:border-primary/50 transition-all"
+                    className="pl-9 h-9 md:h-10 bg-card/50 rounded-xl text-xs md:text-sm w-full border-border/30 focus:border-primary/50 transition-all focus:bg-background"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
@@ -465,58 +513,100 @@ const Transactions = () => {
             {canUseMembership && (
               <div className="relative">
                 {!selectedMember ? (
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                    <Input 
-                      placeholder="Cari Member (Nama/HP)..." 
-                      className="pl-9 h-9 rounded-xl text-xs bg-primary/5 border-primary/20"
-                      value={memberSearch}
-                      onChange={(e) => {
-                        setMemberSearch(e.target.value);
-                        setShowMemberResults(e.target.value.length > 0);
-                      }}
-                    />
-                    {showMemberResults && (
-                      <div className="absolute top-full left-0 w-full mt-1 bg-card border border-border shadow-xl rounded-xl z-50 max-h-40 overflow-y-auto p-1">
-                        {findMember().length > 0 ? findMember().map((m: Member) => (
-                          <div 
-                            key={m.id} 
-                            className="p-2 hover:bg-secondary rounded-lg cursor-pointer flex justify-between items-center"
-                            onClick={() => {
-                              setSelectedMember(m);
-                              setShowMemberResults(false);
-                              setMemberSearch('');
-                              toast.success(`Member ${m.name} dipilih (Diskon 5% Aktif)`);
-                            }}
-                          >
-                            <div className="flex flex-col">
-                              <span className="text-[10px] font-bold">{m.name}</span>
-                              <span className="text-[8px] text-muted-foreground">{m.phone}</span>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/70" />
+                      <Input 
+                        placeholder="Cari Member (Nama/HP)..." 
+                        className="pl-9 h-9 rounded-xl text-xs bg-primary/5 border-primary/20 focus:bg-background transition-all"
+                        value={memberSearch}
+                        onChange={(e) => {
+                          setMemberSearch(e.target.value);
+                          setShowMemberResults(e.target.value.length > 0);
+                        }}
+                      />
+                      {showMemberResults && (
+                        <div className="absolute top-full left-0 w-full mt-1 bg-card border border-border shadow-xl rounded-xl z-50 max-h-40 overflow-y-auto p-1">
+                          {findMember().length > 0 ? findMember().map((m: Member) => (
+                            <div 
+                              key={m.id} 
+                              className="p-2 hover:bg-secondary rounded-lg cursor-pointer flex justify-between items-center"
+                              onClick={() => {
+                                setSelectedMember(m);
+                                setShowMemberResults(false);
+                                setMemberSearch('');
+                                setUsedPoints(0);
+                                const disc = getTierDiscountRate(m.level) * 100;
+                                toast.success(`Member ${m.name} dipilih (Diskon ${disc}% Aktif)`);
+                              }}
+                            >
+                              <div className="flex flex-col">
+                                <span className="text-[10px] font-bold">{m.name}</span>
+                                <div className="flex items-center gap-1">
+                                  <span className="text-[8px] text-muted-foreground">{m.phone}</span>
+                                  <span className="text-[8px] text-amber-500 font-bold">• {m.points} pts</span>
+                                </div>
+                              </div>
+                              <Badge className={`${
+                                m.level === 'Gold' ? 'bg-amber-500' : m.level === 'Silver' ? 'bg-slate-400' : 'bg-orange-400'
+                              } text-[8px] h-4 border-none`}>{m.level}</Badge>
                             </div>
-                            <Badge className="text-[8px] h-4">{m.level}</Badge>
-                          </div>
-                        )) : (
-                          <div className="p-3 text-center text-[10px] text-muted-foreground italic">
-                            Member tidak ditemukan
-                          </div>
-                        )}
-                      </div>
-                    )}
+                          )) : (
+                            <div className="p-3 text-center text-[10px] text-muted-foreground italic">
+                              Member tidak ditemukan
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <Button 
+                      size="icon" 
+                      className="h-9 w-9 rounded-xl flex-shrink-0"
+                      onClick={() => setIsQuickMemberModalOpen(true)}
+                      title="Daftar Member Cepat"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-between p-2 bg-primary/10 border border-primary/30 rounded-xl">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center">
-                        <UserCheck className="w-3 h-3" />
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between p-2 bg-primary/10 border border-primary/30 rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs">
+                          {selectedMember.name.charAt(0)}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-bold leading-none">{selectedMember.name}</span>
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <Badge className={`${
+                              selectedMember.level === 'Gold' ? 'bg-amber-500' : selectedMember.level === 'Silver' ? 'bg-slate-400' : 'bg-orange-400'
+                            } text-[7px] h-3 px-1 border-none`}>{selectedMember.level}</Badge>
+                            <span className="text-[8px] text-primary/70 font-medium">{selectedMember.points} Points</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-bold leading-none">{selectedMember.name}</span>
-                        <span className="text-[8px] text-primary/70 font-medium">Diskon Member 5% Aktif</span>
-                      </div>
+                      <button onClick={() => { setSelectedMember(null); setUsedPoints(0); }} className="text-muted-foreground hover:text-destructive p-1">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
                     </div>
-                    <button onClick={() => setSelectedMember(null)} className="text-muted-foreground hover:text-destructive">
-                      <X className="w-3.5 h-3.5" />
-                    </button>
+
+                    {selectedMember.points > 0 && (
+                      <div className="flex items-center gap-2 p-2 bg-amber-500/5 border border-amber-500/20 rounded-xl">
+                        <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                        <span className="text-[9px] font-bold flex-1">Tukarkan Poin (Max {selectedMember.points})</span>
+                        <div className="flex items-center gap-1">
+                          <InputNumber 
+                            min={0} 
+                            max={selectedMember.points} 
+                            size="small"
+                            className="w-16 text-[10px]"
+                            value={usedPoints}
+                            onChange={(val) => setUsedPoints(val || 0)}
+                          />
+                          <span className="text-[8px] text-muted-foreground">pts</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -623,9 +713,19 @@ const Transactions = () => {
                 <span>{formatCurrency(subtotal)}</span>
               </div>
               {selectedMember && (
-                <div className="flex justify-between text-[10px] lg:text-xs text-emerald-600 font-bold">
-                  <span>Diskon Member (5%)</span>
-                  <span>-{formatCurrency(memberDiscount)}</span>
+                <div className="space-y-1">
+                  {tierDiscount > 0 && (
+                    <div className="flex justify-between text-[10px] lg:text-xs text-emerald-600 font-bold">
+                      <span>Diskon Tier ({selectedMember.level})</span>
+                      <span>-{formatCurrency(tierDiscount)}</span>
+                    </div>
+                  )}
+                  {pointsValue > 0 && (
+                    <div className="flex justify-between text-[10px] lg:text-xs text-emerald-600 font-bold">
+                      <span>Redeem Poin ({usedPoints} pts)</span>
+                      <span>-{formatCurrency(pointsValue)}</span>
+                    </div>
+                  )}
                 </div>
               )}
               <div className="flex justify-between text-[10px] lg:text-xs text-muted-foreground font-medium">
@@ -835,6 +935,65 @@ const Transactions = () => {
           >
             KONFIRMASI PEMBAYARAN
           </Button>
+        </div>
+      </Modal>
+
+      {/* QUICK MEMBER REGISTRATION MODAL */}
+      <Modal
+        title={null}
+        open={isQuickMemberModalOpen}
+        onCancel={() => setIsQuickMemberModalOpen(false)}
+        footer={null}
+        centered
+        width={350}
+      >
+        <div className="p-2">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+              <UserPlus className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="font-black text-lg leading-none">Daftar Member</h2>
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Registrasi Cepat</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase ml-1">Nama Lengkap</label>
+              <Input 
+                placeholder="Nama pelanggan..." 
+                className="h-11 rounded-xl bg-secondary/10 border-none focus:ring-2 focus:ring-primary/20"
+                value={quickMemberData.name}
+                onChange={(e) => setQuickMemberData({...quickMemberData, name: e.target.value})}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase ml-1">Nomor WhatsApp</label>
+              <Input 
+                placeholder="0812xxxx" 
+                className="h-11 rounded-xl bg-secondary/10 border-none focus:ring-2 focus:ring-primary/20"
+                value={quickMemberData.phone}
+                onChange={(e) => setQuickMemberData({...quickMemberData, phone: e.target.value})}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase ml-1">Email (Opsional)</label>
+              <Input 
+                placeholder="email@pelanggan.com" 
+                className="h-11 rounded-xl bg-secondary/10 border-none focus:ring-2 focus:ring-primary/20"
+                value={quickMemberData.email}
+                onChange={(e) => setQuickMemberData({...quickMemberData, email: e.target.value})}
+              />
+            </div>
+
+            <Button 
+              className="w-full h-12 rounded-2xl mt-4 font-black text-sm shadow-lg shadow-primary/20"
+              onClick={handleQuickRegister}
+            >
+              DAFTARKAN & PILIH
+            </Button>
+          </div>
         </div>
       </Modal>
     </Layout>
