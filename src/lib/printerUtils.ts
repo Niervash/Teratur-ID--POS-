@@ -1,5 +1,5 @@
 import { toast } from 'sonner';
-import { BluetoothPrinter } from '@kduma-autoid/capacitor-bluetooth-printer';
+// import { BluetoothPrinter } from '@kduma-autoid/capacitor-bluetooth-printer';
 
 /**
  * Printer Utility for Thermal Receipts (MP-58n / 58mm)
@@ -68,9 +68,10 @@ export const printReceipt = async (transactionData: any) => {
       receiptText += "Powered by Teratur.id\n\n\n\n";
       receiptText += "\x1d\x56\x00"; 
 
-      toast.info("Menghubungkan ke printer...");
-      await BluetoothPrinter.print({ content: receiptText });
-      toast.success("Struk berhasil dicetak");
+      toast.info("Fitur cetak native dinonaktifkan sementara.");
+      // await BluetoothPrinter.print({ content: receiptText });
+      console.log("Native receipt content:", receiptText);
+      // toast.success("Struk berhasil dicetak");
       
     } catch (error: any) {
       console.error('Print Error:', error);
