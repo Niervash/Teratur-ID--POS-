@@ -42,6 +42,12 @@ export interface BusinessData {
   address: string;
   phone: string;
   email: string;
+  initialCapital?: number;
+  capitalSource?: string;
+  foundingDate?: string;
+  receiptHeader?: string;
+  receiptFooter?: string;
+  paperSize?: '58mm' | '80mm';
 }
 
 export const ingredients: Ingredient[] = [
@@ -195,4 +201,7 @@ export const businessData: BusinessData = {
   address: 'Jl. Sudirman No. 12, Jakarta',
   phone: '08123456789',
   email: 'hello@teratur.id',
+  receiptHeader: 'Terima kasih telah berkunjung!',
+  receiptFooter: 'Barang yang sudah dibeli tidak dapat ditukar',
+  paperSize: '58mm',
 };
