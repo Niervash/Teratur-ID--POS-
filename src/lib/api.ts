@@ -1,7 +1,8 @@
 const API_URL =
+  // import.meta.env.VITE_API_URL ||
+  // "https://gym-sacred-psychological-enlargement.trycloudflare.com/";
   import.meta.env.VITE_API_URL ||
-  "https://gym-sacred-psychological-enlargement.trycloudflare.com/";
-
+  "https://prozac-dainty-antiquely.ngrok-free.dev";
 async function request<T>(
   endpoint: string,
   options: RequestInit = {},
