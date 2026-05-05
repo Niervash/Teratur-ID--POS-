@@ -46,6 +46,7 @@ interface NavItem {
   icon: React.ElementType;
   label: string;
   path: string;
+  isComingSoon?: boolean;
 }
 
 interface NavGroup {
@@ -154,8 +155,8 @@ const navGroups: NavGroup[] = [
     items: [
       { icon: Users, label: 'Daftar Karyawan', path: '/employees' },
       { icon: Calendar, label: 'Jadwal Kerja', path: '/employees/jadwal' },
-      { icon: Fingerprint, label: 'Absensi Fingerprint', path: '/employees/absensi' },
-      { icon: DollarSign, label: 'Komisi Penjualan', path: '/employees/komisi' },
+      { icon: Fingerprint, label: 'Absensi Fingerprint', path: '/employees/absensi', isComingSoon: true },
+      { icon: DollarSign, label: 'Komisi Penjualan', path: '/employees/komisi', isComingSoon: true },
     ]
   },
   {
@@ -202,7 +203,7 @@ const navGroups: NavGroup[] = [
     items: [
       { icon: Users, label: 'Daftar Pengguna', path: '/users' },
       { icon: Shield, label: 'Peran & Hak Akses', path: '/users/roles' },
-      { icon: Activity, label: 'Log Aktivitas', path: '/users/log' },
+      { icon: Activity, label: 'Log Aktivitas', path: '/users/log', isComingSoon: true },
     ]
   },
   { 
@@ -341,7 +342,12 @@ export const Sidebar = ({ isCollapsed, onToggle, isOpenMobile, onCloseMobile }: 
                           activeClassName="bg-primary/10 text-foreground"
                         >
                           <item.icon className="w-4 h-4 flex-shrink-0" />
-                          <span>{item.label}</span>
+                          <span className="flex-1">{item.label}</span>
+                          {item.isComingSoon && (
+                            <Badge variant="outline" className="text-[8px] py-0 px-1 bg-primary/5 text-primary border-primary/20 scale-90 origin-right">
+                              SOON
+                            </Badge>
+                          )}
                         </NavLink>
                       ))}
                     </div>
