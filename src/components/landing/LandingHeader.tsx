@@ -40,7 +40,7 @@ export const LandingHeader = () => {
               <img src="/Teratur_logo.png" alt="Teratur Logo" className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col">
-              <span className="text-lg font-bold tracking-tight text-primary">TERATUR.ID</span>
+              <span className="text-lg font-bold tracking-tight text-primary font-brand">TERATUR.ID</span>
               <span className="text-[10px] text-muted-foreground leading-none hidden sm:block uppercase tracking-wider">Smart Management</span>
             </div>
           </Link>

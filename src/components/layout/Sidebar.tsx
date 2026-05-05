@@ -283,8 +283,8 @@ export const Sidebar = ({ isCollapsed, onToggle, isOpenMobile, onCloseMobile }: 
           </div>
           {(!isCollapsed || isMobile) && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <h1 className="font-bold text-foreground tracking-tight">TERATUR.ID</h1>
-              <p className="text-[10px] text-muted-foreground">Smart Management v0.1.0</p>
+              <h1 className="font-bold text-foreground tracking-tight font-brand">TERATUR.ID</h1>
+              <p className="text-[10px] text-muted-foreground font-medium">Smart Management v0.1.0</p>
             </motion.div>
           )}
         </Link>
@@ -344,7 +344,7 @@ export const Sidebar = ({ isCollapsed, onToggle, isOpenMobile, onCloseMobile }: 
                           <item.icon className="w-4 h-4 flex-shrink-0" />
                           <span className="flex-1">{item.label}</span>
                           {item.isComingSoon && (
-                            <Badge variant="outline" className="text-[8px] py-0 px-1 bg-primary/5 text-primary border-primary/20 scale-90 origin-right">
+                            <Badge variant="outline" className="text-[8px] py-0 px-1 bg-emerald-500/10 text-emerald-500 border-emerald-500/20 scale-90 origin-right">
                               SOON
                             </Badge>
                           )}

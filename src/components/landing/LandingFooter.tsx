@@ -11,7 +11,7 @@ export const LandingFooter = () => {
               <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden">
                 <img src="/Teratur_logo.png" alt="Teratur Logo" className="w-full h-full object-contain" />
               </div>
-              <span className="text-lg font-bold tracking-tight text-primary">TERATUR.ID</span>
+              <span className="text-lg font-bold tracking-tight text-primary font-brand">TERATUR.ID</span>
             </div>
             <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">
               Platform manajemen HPP dan keuangan pintar untuk bisnis kuliner Indonesia. Kelola usaha Anda dengan lebih teratur.

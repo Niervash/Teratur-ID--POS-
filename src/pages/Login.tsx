@@ -189,7 +189,7 @@ const Login = () => {
             <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden">
               <img src="/Teratur_logo.png" alt="Teratur Logo" className="w-full h-full object-contain" />
             </div>
-            <h1 className="text-xl font-black tracking-tighter text-primary">TERATUR.ID</h1>
+            <h1 className="text-xl font-bold tracking-tight text-primary font-brand">TERATUR.ID</h1>
           </Link>
           
           <div className="space-y-8">
@@ -236,7 +236,7 @@ const Login = () => {
             <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden">
               <img src="/Teratur_logo.png" alt="Teratur Logo" className="w-full h-full object-contain" />
             </div>
-            <span className="text-sm font-black tracking-tighter text-primary">TERATUR.ID</span>
+            <span className="text-sm font-bold tracking-tight text-primary font-brand">TERATUR.ID</span>
           </Link>
           
           <Link to="/" className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest">
