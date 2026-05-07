@@ -1,10 +1,25 @@
+import { useState, useEffect } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { motion } from 'framer-motion';
 import { DollarSign, TrendingUp, TrendingDown, ArrowUpDown } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { rawMaterials } from '@/data/mockData';
+import { rawMaterials as initialMaterials, RawMaterial } from '@/data/mockData';
 
 const AnalisisHarga = () => {
+  const [rawMaterialsList, setRawMaterialsList] = useState<RawMaterial[]>([]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('teratur_expenses');
+    if (stored) {
+      try {
+        setRawMaterialsList(JSON.parse(stored));
+      } catch {
+        setRawMaterialsList(initialMaterials);
+      }
+    } else {
+      setRawMaterialsList(initialMaterials);
+    }
+  }, []);
   // Mock price fluctuation data for top materials
   const priceHistory = [
     { bulan: 'Jan', beras: 14000, ayam: 38000, minyak: 18000, telur: 28000, gula: 16000 },
@@ -93,13 +108,13 @@ const AnalisisHarga = () => {
                 </tr>
               </thead>
               <tbody>
-                {rawMaterials.map(m => (
+                {rawMaterialsList.map(m => (
                   <tr key={m.id} className="border-b border-border/10 hover:bg-secondary/10">
                     <td className="py-2 px-3 text-foreground font-medium">{m.name}</td>
                     <td className="py-2 px-3 text-muted-foreground capitalize">{m.category.replace('_', ' ')}</td>
-                    <td className="py-2 px-3 text-right text-foreground">{formatCurrency(m.pricePerUnit)}/{m.unit}</td>
-                    <td className="py-2 px-3 text-right text-muted-foreground">{m.stockCurrent} {m.unit}</td>
-                    <td className="py-2 px-3 text-right text-foreground font-medium">{formatCurrency(m.pricePerUnit * m.stockCurrent)}</td>
+                    <td className="py-2 px-3 text-right text-foreground">{formatCurrency(m.pricePerUnit || 0)}/{m.unit}</td>
+                    <td className="py-2 px-3 text-right text-muted-foreground">{m.stockCurrent || 0} {m.unit}</td>
+                    <td className="py-2 px-3 text-right text-foreground font-medium">{formatCurrency((m.pricePerUnit || 0) * (m.stockCurrent || 0))}</td>
                   </tr>
                 ))}
               </tbody>

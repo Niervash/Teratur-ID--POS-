@@ -64,33 +64,25 @@ const Login = () => {
     if (e) e.preventDefault();
     setIsLoading(true);
     
-    setTimeout(() => {
+    try {
+      const response = await api.post<{ user: any, token: string }>('/auth/register', {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        businessName: businessData.name
+      });
+
       setIsFinishing(true);
       setTimeout(() => {
-        // Calculate trial expiry (14 days from now)
-        const trialDays = 14;
-        const expiryDate = new Date();
-        expiryDate.setDate(expiryDate.getDate() + trialDays);
-
-        const newUser = { 
-          id: Date.now().toString(), 
-          ...formData, 
-          role: 'manager' as const,
-          subscription: {
-            status: 'trial',
-            plan: 'Free Trial',
-            trialEndsAt: expiryDate.toISOString(),
-            isActive: true
-          },
-          business: { ...businessData }
-        };
-        
-        // Note: For real backend, this should be an API call to register
-        login(newUser, 'mock-token-for-reg');
+        login(response.user, response.token);
         toast.success("Bisnis Anda berhasil didaftarkan!");
         navigate('/dashboard');
-      }, 2500);
-    }, 1000);
+      }, 1500);
+    } catch (error: any) {
+      toast.error(error.message || "Gagal mendaftarkan bisnis");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {

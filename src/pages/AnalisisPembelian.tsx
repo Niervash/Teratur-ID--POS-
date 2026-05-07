@@ -1,10 +1,25 @@
+import { useState, useEffect } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { motion } from 'framer-motion';
 import { ShoppingCart, TrendingDown, TrendingUp, Package } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { rawMaterials } from '@/data/mockData';
+import { rawMaterials as initialMaterials, RawMaterial } from '@/data/mockData';
 
 const AnalisisPembelian = () => {
+  const [rawMaterialsList, setRawMaterialsList] = useState<RawMaterial[]>([]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('teratur_expenses');
+    if (stored) {
+      try {
+        setRawMaterialsList(JSON.parse(stored));
+      } catch {
+        setRawMaterialsList(initialMaterials);
+      }
+    } else {
+      setRawMaterialsList(initialMaterials);
+    }
+  }, []);
   // Generate mock purchase trend data
   const purchaseTrend = [
     { bulan: 'Jan', total: 4500000 },
@@ -17,9 +32,9 @@ const AnalisisPembelian = () => {
 
   // Category breakdown from rawMaterials
   const categoryMap: Record<string, number> = {};
-  rawMaterials.forEach(m => {
+  rawMaterialsList.forEach(m => {
     const cat = m.category === 'bahan_baku' ? 'Bahan Baku' : m.category === 'tenaga_kerja' ? 'Tenaga Kerja' : m.category === 'overhead' ? 'Overhead' : m.category === 'operasional' ? 'Operasional' : 'Administrasi';
-    categoryMap[cat] = (categoryMap[cat] || 0) + (m.pricePerUnit * m.stockCurrent);
+    categoryMap[cat] = (categoryMap[cat] || 0) + ((m.pricePerUnit || 0) * (m.stockCurrent || 0));
   });
   const categoryData = Object.entries(categoryMap).map(([name, value]) => ({ name, value }));
 
@@ -105,16 +120,16 @@ const AnalisisPembelian = () => {
         <div className="bg-card/50 border border-border/30 rounded-xl p-4">
           <h3 className="text-sm font-semibold text-foreground mb-3">Bahan Baku Terbanyak Dibeli</h3>
           <div className="space-y-2">
-            {rawMaterials.sort((a, b) => (b.pricePerUnit * b.stockCurrent) - (a.pricePerUnit * a.stockCurrent)).slice(0, 5).map((m, i) => (
+            {rawMaterialsList.sort((a, b) => ((b.pricePerUnit || 0) * (b.stockCurrent || 0)) - ((a.pricePerUnit || 0) * (a.stockCurrent || 0))).slice(0, 5).map((m, i) => (
               <div key={m.id} className="flex items-center justify-between px-3 py-2 rounded-lg bg-secondary/20">
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-bold text-muted-foreground w-6">#{i + 1}</span>
                   <div>
                     <p className="text-sm font-medium text-foreground">{m.name}</p>
-                    <p className="text-xs text-muted-foreground">{m.stockCurrent} {m.unit} × {formatCurrency(m.pricePerUnit)}</p>
+                    <p className="text-xs text-muted-foreground">{m.stockCurrent || 0} {m.unit} × {formatCurrency(m.pricePerUnit || 0)}</p>
                   </div>
                 </div>
-                <p className="text-sm font-semibold text-foreground">{formatCurrency(m.pricePerUnit * m.stockCurrent)}</p>
+                <p className="text-sm font-semibold text-foreground">{formatCurrency((m.pricePerUnit || 0) * (m.stockCurrent || 0))}</p>
               </div>
             ))}
           </div>

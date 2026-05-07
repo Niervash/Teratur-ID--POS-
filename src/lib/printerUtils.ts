@@ -20,12 +20,13 @@ export const printReceipt = async (transactionData: any) => {
   const savedData = localStorage.getItem('teratur_business_data');
   const business = savedData ? JSON.parse(savedData) : {
     name: 'TERATUR POS',
-    address: 'Jl. Teknologi Pintar No. 42',
-    phone: '0812-3456-7890',
-    receiptHeader: 'Terima kasih telah berkunjung!',
-    receiptFooter: 'Barang yang sudah dibeli tidak dapat ditukar',
+    address: '',
+    phone: '',
+    receiptHeader: '',
+    receiptFooter: '',
     paperSize: '58mm'
   };
+
 
   const isNative = (window as any).Capacitor?.isNativePlatform();
   const lineWidth = business.paperSize === '80mm' ? 48 : 32;

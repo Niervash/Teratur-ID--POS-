@@ -10,6 +10,7 @@ import { EditProductForm } from './EditProductForm';
 import { BTKLAllocation } from './BTKLAllocation';
 import { Employee } from '@/pages/Employees';
 import { toast } from 'sonner';
+import { api } from '@/lib/api';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,36 +23,12 @@ import {
 } from "@/components/ui/alert-dialog";
 
 // Default employees for BTKL allocation
-const defaultEmployees: Employee[] = [
-  {
-    id: '1',
-    name: 'Ahmad Barista',
-    position: 'Barista',
-    dailyWage: 150000,
-    monthlyWage: 3900000,
-    wageType: 'daily',
-    isProductionLabor: true,
-    department: 'Produksi',
-    phone: '081234567890',
-    joinDate: '2024-01-15',
-  },
-  {
-    id: '2',
-    name: 'Budi Chef',
-    position: 'Chef Pastry',
-    dailyWage: 200000,
-    monthlyWage: 5200000,
-    wageType: 'daily',
-    isProductionLabor: true,
-    department: 'Produksi',
-    phone: '081234567892',
-    joinDate: '2024-01-20',
-  },
-];
+const defaultEmployees: Employee[] = [];
 
 export const ProductList = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
+  const [rawMaterialsList, setRawMaterialsList] = useState<RawMaterial[]>([]);
   const [employees, setEmployees] = useState<Employee[]>(defaultEmployees);
   const [isAdding, setIsAdding] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -60,19 +37,73 @@ export const ProductList = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
-  // Load products from localStorage
+  // Load products from backend and localStorage fallback
   useEffect(() => {
-    const storedProducts = localStorage.getItem('teratur_products');
-    if (storedProducts) {
+    const fetchProducts = async () => {
       try {
-        setProducts(JSON.parse(storedProducts));
-      } catch {
-        setProducts(initialProducts);
+        const backendProducts = await api.get<any[]>('/products');
+        const formatted: Product[] = backendProducts.map(p => ({
+          id: p.id,
+          name: p.name,
+          category: p.category?.name || 'Uncategorized',
+          sellingPrice: Number(p.sellingPrice),
+          hpp: Number(p.hpp),
+          emoji: p.emoji || '📦',
+          unit: p.unit?.name || 'Pcs',
+          recipe: [], // Backend might need to include this
+          ingredients: [],
+          laborCost: 0,
+          overheadCost: 0,
+          salesCount: 0,
+        }));
+        setProducts(formatted);
+        localStorage.setItem('teratur_products', JSON.stringify(formatted));
+      } catch (error) {
+        console.error('Failed to fetch products from backend:', error);
+        const storedProducts = localStorage.getItem('teratur_products');
+        if (storedProducts) {
+          try {
+            setProducts(JSON.parse(storedProducts));
+          } catch {
+            setProducts(initialProducts);
+          }
+        } else {
+          setProducts(initialProducts);
+        }
       }
-    } else {
-      setProducts(initialProducts);
-      localStorage.setItem('teratur_products', JSON.stringify(initialProducts));
-    }
+    };
+
+    fetchProducts();
+
+    // Load raw materials from backend/localStorage
+    const fetchMaterials = async () => {
+      try {
+        const backendMaterials = await api.get<any[]>('/inventory/ingredients');
+        const formatted = backendMaterials.map(m => ({
+          ...m,
+          stock: Number(m.stock),
+          minStock: Number(m.minStock),
+          avgCost: Number(m.avgCost),
+          pricePerUnit: Number(m.avgCost),
+          stockCurrent: Number(m.stock),
+        }));
+        setRawMaterialsList(formatted);
+        localStorage.setItem('teratur_expenses', JSON.stringify(formatted));
+      } catch (error) {
+        const storedMaterials = localStorage.getItem('teratur_expenses');
+        if (storedMaterials) {
+          try {
+            setRawMaterialsList(JSON.parse(storedMaterials));
+          } catch {
+            setRawMaterialsList(rawMaterials);
+          }
+        } else {
+          setRawMaterialsList(rawMaterials);
+        }
+      }
+    };
+    
+    fetchMaterials();
   }, []);
 
   const saveProducts = (data: Product[]) => {
@@ -101,24 +132,63 @@ export const ProductList = () => {
     }).format(value);
   };
 
-  const handleAddProduct = (newProduct: Product) => {
-    const updated = [...products, newProduct];
-    saveProducts(updated);
-    toast.success('Produk berhasil ditambahkan');
-  };
+  const handleAddProduct = async (newProduct: Product) => {
+    try {
+      // 1. Ensure category exists (simplified)
+      const catId = newProduct.category.toLowerCase().replace(/\s+/g, '-');
+      try {
+        await api.post('/inventory/categories', { id: catId, name: newProduct.category });
+      } catch (e) { /* Ignore if exists */ }
 
-  const handleEditProduct = (updatedProduct: Product) => {
-    const updated = products.map(p => p.id === updatedProduct.id ? updatedProduct : p);
-    saveProducts(updated);
-    toast.success('Produk berhasil diperbarui');
-  };
+      // 2. Save to Backend
+      await api.post('/products', {
+        id: newProduct.id,
+        name: newProduct.name,
+        categoryId: catId,
+        unitId: newProduct.unit.toLowerCase(),
+        sellingPrice: newProduct.sellingPrice,
+        hpp: newProduct.hpp,
+        emoji: newProduct.emoji,
+      });
 
-  const handleDeleteProduct = () => {
-    if (productToDelete) {
-      const updated = products.filter(p => p.id !== productToDelete.id);
+      const updated = [newProduct, ...products];
       saveProducts(updated);
-      toast.success(`Produk ${productToDelete.name} berhasil dihapus`);
-      setProductToDelete(null);
+      setIsAdding(false);
+      toast.success('Produk berhasil ditambahkan ke database');
+    } catch (error: any) {
+      toast.error(error.message || 'Gagal menyimpan produk ke database');
+    }
+  };
+
+  const handleEditProduct = async (updatedProduct: Product) => {
+    try {
+      await api.put(`/products/${updatedProduct.id}`, {
+        name: updatedProduct.name,
+        sellingPrice: updatedProduct.sellingPrice,
+        hpp: updatedProduct.hpp,
+        emoji: updatedProduct.emoji,
+      });
+
+      const updated = products.map(p => p.id === updatedProduct.id ? updatedProduct : p);
+      saveProducts(updated);
+      setEditingProduct(null);
+      toast.success('Produk berhasil diperbarui di database');
+    } catch (error: any) {
+      toast.error(error.message || 'Gagal memperbarui produk di database');
+    }
+  };
+
+  const handleDeleteProduct = async () => {
+    if (productToDelete) {
+      try {
+        await api.delete(`/products/${productToDelete.id}`);
+        const updated = products.filter(p => p.id !== productToDelete.id);
+        saveProducts(updated);
+        toast.success(`Produk ${productToDelete.name} berhasil dihapus dari database`);
+        setProductToDelete(null);
+      } catch (error: any) {
+        toast.error(error.message || 'Gagal menghapus produk dari database');
+      }
     }
   };
 
@@ -233,7 +303,7 @@ export const ProductList = () => {
       <AnimatePresence>
         {isAdding && (
           <AddProductForm
-            rawMaterials={rawMaterials}
+            rawMaterials={rawMaterialsList}
             onAddProduct={handleAddProduct}
             onClose={() => setIsAdding(false)}
           />
@@ -245,7 +315,7 @@ export const ProductList = () => {
         {editingProduct && (
           <EditProductForm
             product={editingProduct}
-            rawMaterials={rawMaterials}
+            rawMaterials={rawMaterialsList}
             onSaveProduct={handleEditProduct}
             onClose={() => setEditingProduct(null)}
           />

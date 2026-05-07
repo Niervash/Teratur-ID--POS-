@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -33,6 +33,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/hooks/useAuth';
+import { api } from '@/lib/api';
 
 export interface Employee {
   id: string;
@@ -84,7 +86,8 @@ const initialEmployees: Employee[] = [
 ];
 
 const Employees = () => {
-  const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
+  const { user } = useAuth();
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [activeTab, setActiveTab] = useState('list');
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -96,6 +99,62 @@ const Employees = () => {
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
   
   const [isProcessingPayroll, setIsProcessingPayroll] = useState(false);
+
+  // Load employees from backend and localStorage fallback
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const backendUsers = await api.get<any[]>('/users');
+        const formatted: Employee[] = backendUsers
+          .filter(u => u.roleId !== 'manager') // Don't show managers in employee list
+          .map(u => ({
+            id: u.id,
+            name: u.name,
+            position: u.roleId === 'cashier' ? 'Kasir' : 'Barista',
+            dailyWage: 0, 
+            monthlyWage: 0,
+            wageType: 'daily',
+            department: u.roleId === 'cashier' ? 'Operasional' : 'Produksi',
+            phone: '-', 
+            email: u.email,
+            joinDate: u.createdAt ? new Date(u.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+            status: 'active',
+            performance: 0,
+            attendance: 0,
+          }));
+
+        // Merge with extra data from localStorage if exists
+        const stored = localStorage.getItem('teratur_employees');
+        if (stored) {
+          const localData = JSON.parse(stored) as Employee[];
+          const merged = formatted.map(fe => {
+            const local = localData.find(le => le.email === fe.email);
+            return local ? { ...fe, ...local, id: fe.id } : fe;
+          });
+          setEmployees(merged);
+          localStorage.setItem('teratur_employees', JSON.stringify(merged));
+        } else {
+          setEmployees(formatted);
+          localStorage.setItem('teratur_employees', JSON.stringify(formatted));
+        }
+      } catch (error) {
+        console.error('Failed to fetch employees from backend:', error);
+        const stored = localStorage.getItem('teratur_employees');
+        if (stored) {
+          setEmployees(JSON.parse(stored));
+        } else {
+          setEmployees(initialEmployees);
+        }
+      }
+    };
+
+    fetchEmployees();
+  }, []);
+
+  const saveEmployees = (data: Employee[]) => {
+    setEmployees(data);
+    localStorage.setItem('teratur_employees', JSON.stringify(data));
+  };
 
   // New Employee Form State
   const [formData, setFormData] = useState({
@@ -109,60 +168,59 @@ const Employees = () => {
     joinDate: new Date().toISOString().split('T')[0]
   });
 
-  const handleAddEmployee = () => {
+  const handleAddEmployee = async () => {
     if (!formData.name || !formData.position || !formData.email || !formData.password) {
       toast.error("Mohon lengkapi data (Nama, Email, Jabatan, & Password)!");
       return;
     }
 
-    // 1. Create Employee Object for the Table
-    const employeeId = Date.now().toString();
-    const newEmp: Employee = {
-      id: employeeId,
-      name: formData.name,
-      position: formData.position,
-      department: formData.department,
-      dailyWage: formData.dailyWage,
-      monthlyWage: formData.dailyWage * 26,
-      wageType: 'daily',
-      phone: formData.phone,
-      email: formData.email,
-      joinDate: formData.joinDate,
-      status: 'active',
-      performance: 0,
-      attendance: 0
-    };
+    try {
+      // 1. Register to Backend Database
+      const roleId = formData.position.toLowerCase().includes('kasir') ? 'cashier' : 'manager';
+      
+      const response = await api.post<{ user: any, token: string }>('/auth/register', {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        roleId: roleId,
+        outletId: user?.outletId // Sync with manager's outlet
+      });
 
-    // 2. Create User Account for Login
-    const newUserAccount = {
-      id: employeeId,
-      name: formData.name,
-      email: formData.email,
-      password: formData.password,
-      role: formData.position.toLowerCase().includes('kasir') ? 'cashier' : 'manager'
-    };
+      // 2. Create Employee Object for the Table
+      const newEmp: Employee = {
+        id: response.user.id,
+        name: formData.name,
+        position: formData.position,
+        department: formData.department,
+        dailyWage: formData.dailyWage,
+        monthlyWage: formData.dailyWage * 26,
+        wageType: 'daily',
+        phone: formData.phone,
+        email: formData.email,
+        joinDate: formData.joinDate,
+        status: 'active',
+        performance: 0,
+        attendance: 0
+      };
 
-    // Save to System Users
-    const existingUsers = JSON.parse(localStorage.getItem('teratur_users') || '[]');
-    if (existingUsers.some((u: any) => u.email === formData.email)) {
-      toast.error("Email sudah terdaftar di sistem!");
-      return;
+      // Update Local State & Storage
+      const updated = [newEmp, ...employees];
+      saveEmployees(updated);
+      
+      setIsAdding(false);
+      
+      // Reset Form
+      setFormData({
+        name: '', position: '', department: 'Produksi',
+        dailyWage: 0, email: '', phone: '', password: '',
+        joinDate: new Date().toISOString().split('T')[0]
+      });
+      
+      toast.success(`${newEmp.name} berhasil terdaftar sebagai ${roleId.toUpperCase()}!`);
+    } catch (error: any) {
+      const errorMessage = error.message || "Gagal mendaftarkan karyawan ke sistem login";
+      toast.error(errorMessage);
     }
-    
-    localStorage.setItem('teratur_users', JSON.stringify([...existingUsers, newUserAccount]));
-
-    // Update Local UI State
-    setEmployees(prev => [newEmp, ...prev]);
-    setIsAdding(false);
-    
-    // Reset Form
-    setFormData({
-      name: '', position: '', department: 'Produksi',
-      dailyWage: 0, email: '', phone: '', password: '',
-      joinDate: new Date().toISOString().split('T')[0]
-    });
-    
-    toast.success(`${newEmp.name} berhasil terdaftar sebagai ${newUserAccount.role.toUpperCase()}!`);
   };
 
   const formatCurrency = (value: number) => {

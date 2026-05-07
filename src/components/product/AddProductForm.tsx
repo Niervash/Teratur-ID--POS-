@@ -110,10 +110,6 @@ export const AddProductForm = ({ rawMaterials, onAddProduct, onClose }: AddProdu
       toast.error('Mohon isi harga jual');
       return;
     }
-    if (ingredients.length === 0) {
-      toast.error('Mohon tambahkan minimal 1 bahan baku');
-      return;
-    }
 
     const newProduct: Product = {
       id: Date.now().toString(),
@@ -131,6 +127,7 @@ export const AddProductForm = ({ rawMaterials, onAddProduct, onClose }: AddProdu
       stockCurrent: 0,
       unit: formData.unit,
       description: formData.description,
+      recipe: ingredients.map(ing => ({ ingredientId: ing.materialId, quantity: ing.amount })),
     };
 
     onAddProduct(newProduct);

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
-import { products, Product, ingredients } from '@/data/mockData';
+import { Product, ingredients } from '@/data/mockData';
 import { Member } from './Members';
 import { 
   Plus, Minus, Trash2, CreditCard, Banknote, 
@@ -18,6 +18,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
 import { Select, Modal, InputNumber } from 'antd';
 import { printReceipt } from '@/lib/printerUtils';
+import { api } from '@/lib/api';
 
 interface CartItem {
   product: Product;
@@ -46,6 +47,7 @@ const CATEGORIES = [
 
 const Transactions = () => {
   const { user, hasFeature, addAuditLog } = useAuth();
+  const [productsList, setProductsList] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orderType, setOrderType] = useState<'dine-in' | 'take-away' | 'delivery'>('dine-in');
   const [deliveryPlatform, setDeliveryPlatform] = useState<string>('GoFood');
@@ -344,6 +346,33 @@ const Transactions = () => {
     );
   };
 
+  // Load products from backend
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const backendProducts = await api.get<any[]>('/products');
+        const formatted: Product[] = backendProducts.map(p => ({
+          id: p.id,
+          name: p.name,
+          category: p.category?.name || 'Uncategorized',
+          sellingPrice: Number(p.sellingPrice),
+          hpp: Number(p.hpp),
+          emoji: p.emoji || '📦',
+          unit: p.unit?.name || 'Pcs',
+          recipe: [],
+          ingredients: [],
+          laborCost: 0,
+          overheadCost: 0,
+          salesCount: 0,
+        }));
+        setProductsList(formatted);
+      } catch (error) {
+        console.error('Failed to fetch products:', error);
+      }
+    };
+    fetchProducts();
+  }, []);
+
   const handlePrintReceipt = () => {
     if (cart.length === 0) {
       toast.error('Keranjang kosong, tidak ada yang bisa dicetak.');
@@ -357,7 +386,7 @@ const Transactions = () => {
     }, 1500);
   };
 
-  const filteredProducts = products.filter(p => {
+  const filteredProducts = productsList.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         p.category.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || p.category === selectedCategory;

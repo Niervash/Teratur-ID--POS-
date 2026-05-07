@@ -23,12 +23,7 @@ export const DataInitializer = () => {
     
     // Initialize shift definitions if not exists
     if (!localStorage.getItem('teratur_shift_defs')) {
-      const defaultShifts = [
-        { id: 's1', name: 'Shift Pagi', startTime: '08:00', endTime: '16:00', color: 'bg-blue-500' },
-        { id: 's2', name: 'Shift Siang', startTime: '12:00', endTime: '20:00', color: 'bg-orange-500' },
-        { id: 's3', name: 'Shift Malam', startTime: '16:00', endTime: '00:00', color: 'bg-indigo-500' },
-      ];
-      localStorage.setItem('teratur_shift_defs', JSON.stringify(defaultShifts));
+      localStorage.setItem('teratur_shift_defs', '[]');
     }
 
     // Initialize employee schedules if not exists

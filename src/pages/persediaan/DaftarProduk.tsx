@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { ingredients as initialIngredients, Ingredient } from '@/data/mockData';
 import { toast } from 'sonner';
+import { api } from '@/lib/api';
 import { Modal, Select, InputNumber, Form, Input as AntdInput } from 'antd';
 import {
   DropdownMenu,
@@ -35,18 +36,72 @@ const Ingredients = () => {
   const [addForm] = Form.useForm();
 
   useEffect(() => {
-    const stored = localStorage.getItem('teratur_ingredients');
-    if (stored) {
-      setIngredients(JSON.parse(stored));
-    } else {
-      setIngredients(initialIngredients);
-      localStorage.setItem('teratur_ingredients', JSON.stringify(initialIngredients));
-    }
+    const fetchIngredients = async () => {
+      try {
+        const backendIngredients = await api.get<any[]>('/inventory/ingredients');
+        const formatted = backendIngredients.map(m => ({
+          ...m,
+          stock: Number(m.stock),
+          minStock: Number(m.minStock),
+          avgCost: Number(m.avgCost),
+          // Ensure compatibility with Ingredient interface
+          stockCurrent: Number(m.stock),
+          pricePerUnit: Number(m.avgCost),
+        }));
+        setIngredients(formatted);
+        localStorage.setItem('teratur_expenses', JSON.stringify(formatted));
+      } catch (error) {
+        console.error('Failed to fetch ingredients:', error);
+        const stored = localStorage.getItem('teratur_expenses');
+        if (stored) {
+          setIngredients(JSON.parse(stored));
+        } else {
+          setIngredients(initialIngredients);
+        }
+      }
+    };
+
+    fetchIngredients();
   }, []);
 
-  const saveIngredients = (data: Ingredient[]) => {
+  const saveIngredients = async (data: Ingredient[]) => {
+    // This is called when adding/updating local state
     setIngredients(data);
-    localStorage.setItem('teratur_ingredients', JSON.stringify(data));
+    localStorage.setItem('teratur_expenses', JSON.stringify(data));
+  };
+
+  const onAddIngredient = async (values: any) => {
+    try {
+      const newIng: Ingredient = {
+        id: `ing-${Date.now()}`,
+        name: values.name,
+        unit: values.unit,
+        stock: values.stock || 0,
+        minStock: values.minStock || 0,
+        avgCost: values.avgCost || 0,
+        category: values.category || 'bahan_baku',
+        stockCurrent: values.stock || 0,
+        pricePerUnit: values.avgCost || 0,
+      };
+
+      // 1. Sync to Backend
+      await api.post('/inventory/ingredients', {
+        id: newIng.id,
+        name: newIng.name,
+        unit: newIng.unit,
+        stock: newIng.stock,
+        minStock: newIng.minStock,
+        avgCost: newIng.avgCost,
+      });
+
+      // 2. Update Local
+      saveIngredients([newIng, ...ingredients]);
+      setIsAddModalOpen(false);
+      addForm.resetFields();
+      toast.success('Bahan baku berhasil disimpan ke database');
+    } catch (error: any) {
+      toast.error(error.message || 'Gagal menyimpan bahan baku ke database');
+    }
   };
 
   const handleRestock = (ingredient: Ingredient) => {

@@ -1,8 +1,7 @@
 const API_URL =
   // import.meta.env.VITE_API_URL ||
   // "https://gym-sacred-psychological-enlargement.trycloudflare.com/";
-  import.meta.env.VITE_API_URL ||
-  "https://prozac-dainty-antiquely.ngrok-free.dev";
+  import.meta.env.VITE_API_URL || "https://prozac-dainty-antiquely.ngrok-free.dev";
 async function request<T>(
   endpoint: string,
   options: RequestInit = {},
@@ -11,6 +10,7 @@ async function request<T>(
 
   const headers = new Headers(options.headers);
   headers.set("Content-Type", "application/json");
+  headers.set("ngrok-skip-browser-warning", "true");
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }

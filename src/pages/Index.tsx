@@ -204,7 +204,7 @@ const Index = () => {
               Live Data
             </div>
             <div className="w-1 h-1 rounded-full bg-border" />
-            Periode: {dateRange === 'today' ? '21 April 2024' : dateRange === 'month' ? 'April 2024' : 'Tahun 2024'}
+            Periode: {dateRange === 'today' ? format(new Date(), 'dd MMMM yyyy') : dateRange === 'month' ? format(new Date(), 'MMMM yyyy') : format(new Date(), 'yyyy')}
             <div className="w-1 h-1 rounded-full bg-border" />
             Mode: {dataScope === 'all' ? 'FULL ARCHIVE' : 'REAL-TIME ANALYTICS'}
           </motion.div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
 import { Check, Info, ChevronDown } from 'lucide-react';
@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from 'antd';
 import { rawMaterials as initialMaterials, RawMaterial } from '@/data/mockData';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { toast } from 'sonner';
+import { api } from '@/lib/api';
 
 const categories = [
   { value: 'bahan_baku', label: 'Bahan Baku (HPP)' },
@@ -20,7 +20,7 @@ const categories = [
 const units = ['Kg', 'Gram', 'Liter', 'Pcs', 'Paket', 'Hari', 'Bulan'];
 
 const InputPengeluaran = () => {
-  const [materials, setMaterials] = useLocalStorage<RawMaterial[]>('teratur_expenses', initialMaterials);
+  const [materials, setMaterials] = useState<RawMaterial[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     pricePerUnit: 0,
@@ -29,21 +29,77 @@ const InputPengeluaran = () => {
     description: '',
   });
 
-  const handleSubmit = () => {
+  useEffect(() => {
+    const fetchMaterials = async () => {
+      try {
+        const data = await api.get<any[]>('/inventory/ingredients');
+        const formatted = data.map(m => ({
+          ...m,
+          stock: Number(m.stock),
+          minStock: Number(m.minStock),
+          avgCost: Number(m.avgCost),
+          pricePerUnit: Number(m.avgCost),
+          stockCurrent: Number(m.stock),
+        }));
+        setMaterials(formatted);
+      } catch (error) {
+        console.error('Failed to fetch materials:', error);
+      }
+    };
+    fetchMaterials();
+  }, []);
+
+  const handleSubmit = async () => {
     if (!formData.name || formData.pricePerUnit <= 0) {
       toast.error('Mohon isi nama dan harga dengan benar');
       return;
     }
 
-    const newMaterial: RawMaterial = {
-      id: Date.now().toString(),
-      ...formData,
-      stockCurrent: 0,
-    };
+    try {
+      const id = `exp-${Date.now()}`;
+      
+      // 1. Record General Expense
+      await api.post('/expenses', {
+        id,
+        name: formData.name,
+        amount: formData.pricePerUnit,
+        unit: formData.unit,
+        category: formData.category,
+        description: formData.description
+      });
 
-    setMaterials(prev => [...prev, newMaterial]);
-    setFormData({ name: '', pricePerUnit: 0, unit: 'Kg', category: 'bahan_baku', description: '' });
-    toast.success('Data pengeluaran berhasil ditambahkan!');
+      // 2. Sync to Ingredients if HPP related
+      if (['bahan_baku', 'tenaga_kerja', 'overhead'].includes(formData.category)) {
+        try {
+          await api.post('/inventory/ingredients', {
+            id: `ing-${Date.now()}`,
+            name: formData.name,
+            unit: formData.unit,
+            stock: 0,
+            minStock: 0,
+            avgCost: formData.pricePerUnit,
+          });
+        } catch (ingErr) {
+          console.error('Failed to sync to ingredients, but expense was recorded');
+        }
+      }
+
+      // 3. Update Local UI State
+      const newMaterial: RawMaterial = {
+        id,
+        ...formData,
+        stockCurrent: 0,
+      };
+
+      const updated = [newMaterial, ...materials];
+      setMaterials(updated);
+      localStorage.setItem('teratur_expenses', JSON.stringify(updated));
+      
+      setFormData({ name: '', pricePerUnit: 0, unit: 'Kg', category: 'bahan_baku', description: '' });
+      toast.success('Pengeluaran berhasil dicatat!');
+    } catch (error: any) {
+      toast.error(error.message || 'Gagal menyimpan pengeluaran');
+    }
   };
 
   return (
